@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SURF the TAsk | 대시보드</title>
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <script defer src="/js/dashboard.js"></script>
+</head>
+<body>
+<div class="app-shell">
+    <aside class="side-nav" aria-label="주요 메뉴">
+        <a class="side-brand" href="/dashboard" aria-label="SURF the TAsk 대시보드">
+            <span>SURF</span>
+            <strong>the TAsk</strong>
+        </a>
+
+        <nav class="nav-list">
+            <a class="active" href="/dashboard">대시보드</a>
+            <a href="#task-workspace">Task</a>
+            <a href="/progress">Progress</a>
+            <a href="#availability">가능 시간</a>
+            <a href="#reminders">알림</a>
+        </nav>
+
+        <div class="focus-entry">
+            <span>Focus 항해</span>
+            <strong>Ready</strong>
+        </div>
+    </aside>
+
+    <main class="dashboard" data-dashboard>
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">Dashboard</p>
+                <h1><span data-user-name>사용자</span>의 오늘 항해</h1>
+                <p data-today-label>오늘의 가능 시간과 Task 흐름을 확인하세요.</p>
+            </div>
+            <div class="topbar-actions">
+                <a class="progress-link" href="/progress">Progress 보기</a>
+                <button class="ghost-button" type="button" data-logout>로그아웃</button>
+            </div>
+        </header>
+
+        <section class="summary-grid" aria-label="오늘의 요약">
+            <article class="summary-item">
+                <span>전체 완료율</span>
+                <strong data-completion-rate>0%</strong>
+                <small>Task 진행도</small>
+            </article>
+            <article class="summary-item">
+                <span>완료 Task</span>
+                <strong data-done-tasks>0</strong>
+                <small data-total-tasks>전체 0개</small>
+            </article>
+            <article class="summary-item">
+                <span>미완료 Task</span>
+                <strong data-incomplete-tasks>0</strong>
+                <small>다음 파도 후보</small>
+            </article>
+            <article class="summary-item">
+                <span>최고 Streak</span>
+                <strong data-best-streak>0일</strong>
+                <small>Daily Goal 기준</small>
+            </article>
+        </section>
+
+        <section class="task-workspace" id="task-workspace" data-task-workspace aria-label="Task workspace">
+            <article class="panel task-form-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Daily Goal</p>
+                        <h2>매일 목표 추가</h2>
+                    </div>
+                </div>
+                <form class="task-form" data-daily-goal-form>
+                    <label>
+                        <span>제목</span>
+                        <input name="title" type="text" maxlength="100" required>
+                    </label>
+                    <label>
+                        <span>설명</span>
+                        <textarea name="description" rows="2"></textarea>
+                    </label>
+                    <div class="form-row">
+                        <label>
+                            <span>예상 시간</span>
+                            <input name="estimatedMinutes" type="number" min="1" value="30" required>
+                        </label>
+                        <label>
+                            <span>중요도</span>
+                            <input name="importance" type="number" min="1" max="5" value="3" required>
+                        </label>
+                        <label>
+                            <span>하루 목표</span>
+                            <input name="targetCountPerDay" type="number" min="1" value="1" required>
+                        </label>
+                    </div>
+                    <button class="primary-button" type="submit">Daily Goal 추가</button>
+                </form>
+            </article>
+
+            <article class="panel task-form-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Deadline Task</p>
+                        <h2>마감 업무 추가</h2>
+                    </div>
+                </div>
+                <form class="task-form" data-deadline-task-form>
+                    <label>
+                        <span>제목</span>
+                        <input name="title" type="text" maxlength="100" required>
+                    </label>
+                    <label>
+                        <span>설명</span>
+                        <textarea name="description" rows="2"></textarea>
+                    </label>
+                    <div class="form-row">
+                        <label>
+                            <span>예상 시간</span>
+                            <input name="estimatedMinutes" type="number" min="1" value="60" required>
+                        </label>
+                        <label>
+                            <span>중요도</span>
+                            <input name="importance" type="number" min="1" max="5" value="4" required>
+                        </label>
+                    </div>
+                    <div class="form-row">
+                        <label>
+                            <span>마감</span>
+                            <input name="deadlineAt" type="datetime-local" required>
+                        </label>
+                        <label>
+                            <span>경고 시간</span>
+                            <input name="warningThresholdHours" type="number" min="1" value="24" required>
+                        </label>
+                    </div>
+                    <button class="primary-button" type="submit">Deadline Task 추가</button>
+                </form>
+            </article>
+        </section>
+
+        <section class="main-grid">
+            <article class="wave-panel" aria-label="진행도 파도 미리보기">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Progress wave</p>
+                        <h2>이번 달 진행도</h2>
+                    </div>
+                    <strong data-wave-rate>0%</strong>
+                </div>
+                <div class="wave-visual" data-wave-visual style="--wave-level: 12%;">
+                    <span class="wave-fill"></span>
+                    <span class="wave-crest crest-one"></span>
+                    <span class="wave-crest crest-two"></span>
+                </div>
+                <p class="panel-note" data-wave-note>완료 데이터가 쌓이면 파도가 더 높아집니다.</p>
+            </article>
+
+            <article class="priority-panel" aria-label="Task 우선순위">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Priority</p>
+                        <h2>다음 Task</h2>
+                    </div>
+                </div>
+                <div class="task-list compact" data-priority-list></div>
+            </article>
+        </section>
+
+        <section class="content-grid">
+            <article class="panel" id="daily-goals">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Daily Goal</p>
+                        <h2>매일 목표</h2>
+                    </div>
+                    <span class="count-badge" data-daily-count>0</span>
+                </div>
+                <div class="task-list" data-daily-list></div>
+            </article>
+
+            <article class="panel" id="deadline-tasks">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Deadline Task</p>
+                        <h2>마감 업무</h2>
+                    </div>
+                    <span class="count-badge warning" data-deadline-count>0</span>
+                </div>
+                <div class="task-list" data-deadline-list></div>
+            </article>
+
+            <article class="panel" id="availability">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Availability</p>
+                        <h2>가능 시간</h2>
+                    </div>
+                    <span class="count-badge calm" data-availability-count>0</span>
+                </div>
+                <div class="slot-list" data-availability-list></div>
+            </article>
+
+            <article class="panel" id="reminders">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Reminder</p>
+                        <h2>알림 흐름</h2>
+                    </div>
+                    <span class="count-badge" data-reminder-count>0</span>
+                </div>
+                <div class="reminder-list" data-reminder-list></div>
+            </article>
+        </section>
+
+        <p class="load-message" data-load-message role="status" aria-live="polite"></p>
+    </main>
+</div>
+</body>
+</html>

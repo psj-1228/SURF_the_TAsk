@@ -1,0 +1,254 @@
+:root {
+    color-scheme: light;
+    --ink: #102235;
+    --muted: #667789;
+    --line: #dbe5ed;
+    --surface: #ffffff;
+    --ocean: #1464c8;
+    --ocean-dark: #063053;
+    --teal: #10a8a0;
+    --mint: #c9f4df;
+    --sand: #f4ddb2;
+    --coral: #e85c57;
+    --gold: #f3bd38;
+    --shadow: 0 24px 58px rgba(14, 40, 68, 0.16);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    min-height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, "Malgun Gothic", sans-serif;
+    color: var(--ink);
+    background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(235, 248, 255, 0.88)),
+            #eef7fb;
+}
+
+a {
+    color: var(--ocean);
+    font-weight: 800;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.auth-shell {
+    display: grid;
+    grid-template-columns: minmax(360px, 0.88fr) minmax(340px, 440px);
+    width: min(1160px, calc(100% - 40px));
+    min-height: 100vh;
+    margin: 0 auto;
+    padding: 44px 0;
+    align-items: center;
+}
+
+.surf-visual {
+    position: relative;
+    min-height: 620px;
+    overflow: hidden;
+    border-radius: 8px 0 0 8px;
+    background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(5, 58, 92, 0.08)),
+            url("/img/background-ui.png") center / cover no-repeat;
+    box-shadow: var(--shadow);
+}
+
+.compact-brand {
+    display: inline-flex;
+    gap: 12px;
+    align-items: center;
+    color: var(--ink);
+    text-decoration: none;
+}
+
+.compact-brand:hover {
+    text-decoration: none;
+}
+
+.brand-mark {
+    display: inline-grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    color: #ffffff;
+    background: var(--ocean);
+    font-size: 22px;
+    font-weight: 900;
+}
+
+.compact-brand strong,
+.compact-brand small {
+    display: block;
+}
+
+.compact-brand small {
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.auth-panel {
+    min-height: 620px;
+    padding: 64px 48px;
+    border-radius: 0 8px 8px 0;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: var(--shadow);
+}
+
+.auth-copy {
+    margin: 68px 0 30px;
+}
+
+.eyebrow {
+    margin: 0 0 10px;
+    color: var(--teal);
+    font-size: 13px;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.auth-copy h2 {
+    margin: 0;
+    font-size: 28px;
+    line-height: 1.28;
+}
+
+.auth-copy p {
+    margin: 14px 0 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.65;
+}
+
+.auth-form {
+    display: grid;
+    gap: 16px;
+}
+
+.field {
+    display: grid;
+    gap: 8px;
+}
+
+.field label {
+    color: #2d4051;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.field input {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+    outline: none;
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.field input:focus {
+    border-color: var(--ocean);
+    box-shadow: 0 0 0 4px rgba(20, 100, 200, 0.12);
+}
+
+.primary-button {
+    min-height: 50px;
+    border: 0;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--ocean), #0b7bd3);
+    color: #ffffff;
+    font: inherit;
+    font-weight: 900;
+    cursor: pointer;
+    transition: transform 160ms ease, filter 160ms ease;
+}
+
+.primary-button:hover {
+    filter: brightness(0.95);
+}
+
+.primary-button:active {
+    transform: translateY(1px);
+}
+
+.primary-button:disabled {
+    cursor: wait;
+    opacity: 0.72;
+}
+
+.form-message {
+    min-height: 22px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+.form-message.error {
+    color: #b7322c;
+}
+
+.form-message.success {
+    color: #087a6f;
+}
+
+.switch-copy {
+    margin: 22px 0 0;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+@media (max-width: 900px) {
+    .auth-shell {
+        grid-template-columns: 1fr;
+        width: min(100% - 32px, 560px);
+        padding: 28px 0;
+    }
+
+    .surf-visual {
+        min-height: 380px;
+        border-radius: 8px 8px 0 0;
+        background-position: center 34%;
+    }
+
+    .auth-panel {
+        min-height: auto;
+        border-radius: 0 0 8px 8px;
+        padding: 40px 28px;
+    }
+
+    .auth-copy {
+        margin-top: 44px;
+    }
+
+}
+
+@media (max-width: 520px) {
+    .auth-shell {
+        width: min(100% - 24px, 480px);
+    }
+
+    .surf-visual {
+        min-height: 320px;
+        background-size: cover;
+        background-position: center top;
+    }
+
+    .auth-copy h2 {
+        font-size: 24px;
+    }
+}

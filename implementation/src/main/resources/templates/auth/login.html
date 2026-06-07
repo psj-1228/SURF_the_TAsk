@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SURF the TAsk | 로그인</title>
+    <link rel="stylesheet" href="/css/auth.css">
+    <script defer src="/js/auth.js"></script>
+</head>
+<body>
+<main class="auth-shell">
+    <section class="surf-visual" aria-label="SURF the TAsk 해변 배경"></section>
+
+    <section class="auth-panel" aria-label="로그인">
+        <a class="compact-brand" href="/login" aria-label="SURF the TAsk 로그인">
+            <span class="brand-mark" aria-hidden="true">S</span>
+            <span>
+                <strong>SURF the TAsk</strong>
+                <small>Availability-aware planner</small>
+            </span>
+        </a>
+
+        <div class="auth-copy">
+            <p class="eyebrow">Welcome back</p>
+            <h2>오늘의 Task를 서핑하러 갈 시간입니다.</h2>
+            <p>로그인하면 사용자별 대시보드에서 오늘의 목표, 마감 업무, 가용 시간을 바로 확인할 수 있습니다.</p>
+        </div>
+
+        <form class="auth-form" data-auth-form="login" novalidate>
+            <div class="field">
+                <label for="loginId">아이디</label>
+                <input id="loginId" name="loginId" type="text" autocomplete="username" required>
+            </div>
+
+            <div class="field">
+                <label for="password">비밀번호</label>
+                <input id="password" name="password" type="password" autocomplete="current-password" required>
+            </div>
+
+            <p class="form-message" data-form-message role="status" aria-live="polite"></p>
+
+            <button class="primary-button" type="submit">로그인</button>
+        </form>
+
+        <p class="switch-copy">
+            아직 계정이 없나요?
+            <a href="/register">회원가입</a>
+        </p>
+    </section>
+</main>
+</body>
+</html>
