@@ -1,5 +1,6 @@
 package com.surfthetask.service;
 
+import com.surfthetask.domain.entity.DailyGoal;
 import com.surfthetask.domain.entity.DeadlineTask;
 import com.surfthetask.domain.entity.FocusSession;
 import com.surfthetask.domain.entity.NotificationPreference;
@@ -14,6 +15,7 @@ import com.surfthetask.domain.enums.TaskStatus;
 import com.surfthetask.domain.value.AvailabilitySlot;
 import com.surfthetask.dto.request.NotificationPreferenceReqDto;
 import com.surfthetask.exception.NotFoundException;
+import com.surfthetask.repository.DailyGoalRepository;
 import com.surfthetask.repository.DeadlineTaskRepository;
 import com.surfthetask.repository.NotificationPreferenceRepository;
 import com.surfthetask.repository.PersonalScheduleRepository;
@@ -21,9 +23,15 @@ import com.surfthetask.repository.ReminderHistoryRepository;
 import com.surfthetask.repository.ReminderRepository;
 import com.surfthetask.repository.TaskRepository;
 import com.surfthetask.repository.UserRepository;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailException;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,39 +42,51 @@ public class ReminderService {
     private final UserRepository userRepository;
     private final TaskRepository taskRepository;
     private final DeadlineTaskRepository deadlineTaskRepository;
+    private final DailyGoalRepository dailyGoalRepository;
     private final PersonalScheduleRepository personalScheduleRepository;
     private final NotificationPreferenceRepository notificationPreferenceRepository;
     private final ReminderRepository reminderRepository;
     private final ReminderHistoryRepository reminderHistoryRepository;
     private final ScheduleAnalyzer scheduleAnalyzer;
     private final PriorityCalculator priorityCalculator;
+    private final ObjectProvider<JavaMailSender> mailSenderProvider;
+    private final boolean emailDeliveryEnabled;
+    private final String emailFrom;
 
     public ReminderService(
             UserRepository userRepository,
             TaskRepository taskRepository,
             DeadlineTaskRepository deadlineTaskRepository,
+            DailyGoalRepository dailyGoalRepository,
             PersonalScheduleRepository personalScheduleRepository,
             NotificationPreferenceRepository notificationPreferenceRepository,
             ReminderRepository reminderRepository,
             ReminderHistoryRepository reminderHistoryRepository,
             ScheduleAnalyzer scheduleAnalyzer,
-            PriorityCalculator priorityCalculator
+            PriorityCalculator priorityCalculator,
+            ObjectProvider<JavaMailSender> mailSenderProvider,
+            @Value("${app.notification.email.enabled:false}") boolean emailDeliveryEnabled,
+            @Value("${app.notification.email.from:no-reply@surfthetask.local}") String emailFrom
     ) {
         this.userRepository = userRepository;
         this.taskRepository = taskRepository;
         this.deadlineTaskRepository = deadlineTaskRepository;
+        this.dailyGoalRepository = dailyGoalRepository;
         this.personalScheduleRepository = personalScheduleRepository;
         this.notificationPreferenceRepository = notificationPreferenceRepository;
         this.reminderRepository = reminderRepository;
         this.reminderHistoryRepository = reminderHistoryRepository;
         this.scheduleAnalyzer = scheduleAnalyzer;
         this.priorityCalculator = priorityCalculator;
+        this.mailSenderProvider = mailSenderProvider;
+        this.emailDeliveryEnabled = emailDeliveryEnabled;
+        this.emailFrom = emailFrom;
     }
 
     @Transactional
     public Reminder checkAvailabilityReminder(User user, LocalDateTime now) {
         NotificationPreference preference = getOrCreatePreference(user);
-        if (!preference.canSend(AlertChannel.EMAIL, ReminderType.AVAILABILITY_BASED)) {
+        if (!preference.canSend(AlertChannel.IN_SITE, ReminderType.AVAILABILITY_BASED)) {
             return null;
         }
 
@@ -77,25 +97,27 @@ public class ReminderService {
             return null;
         }
 
-        if (hasRecentUserReminder(user, ReminderType.AVAILABILITY_BASED, AlertChannel.EMAIL, now, preference)) {
+        if (hasRecentUserReminder(user, ReminderType.AVAILABILITY_BASED, AlertChannel.IN_SITE, now, preference)) {
             return null;
         }
 
-        List<Task> incompleteTasks = taskRepository.findByUserUserIdAndStatusNotOrderByCreatedAtDesc(
-                user.getUserId(),
-                TaskStatus.DONE
-        );
-        if (incompleteTasks.isEmpty()) {
+        List<Task> unfinishedTasks = unfinishedWorkForAvailability(user, now.toLocalDate());
+        if (unfinishedTasks.isEmpty()) {
             return null;
         }
 
-        Task topTask = priorityCalculator.sortTasks(incompleteTasks, now).get(0);
+        List<Task> sortedTasks = priorityCalculator.sortTasks(unfinishedTasks, now);
+        if (sortedTasks.isEmpty()) {
+            return null;
+        }
+
+        Task topTask = sortedTasks.get(0);
         Reminder reminder = reminderRepository.save(new Reminder(
                 user,
                 topTask,
                 null,
                 ReminderType.AVAILABILITY_BASED,
-                AlertChannel.EMAIL,
+                AlertChannel.IN_SITE,
                 "Available time detected. Recommended task: " + topTask.getTitle(),
                 now
         ));
@@ -107,35 +129,13 @@ public class ReminderService {
     public List<Reminder> checkDeadlineReminder(User user, LocalDateTime now) {
         NotificationPreference preference = getOrCreatePreference(user);
         List<Reminder> created = new ArrayList<>();
-        if (!preference.canSend(AlertChannel.EMAIL, ReminderType.DEADLINE_WARNING)) {
+        if (!preference.canSend(AlertChannel.EMAIL, ReminderType.DAILY_GOAL_DAY_END_ONE_HOUR)
+                && !preference.canSend(AlertChannel.EMAIL, ReminderType.DEADLINE_ONE_HOUR)) {
             return created;
         }
 
-        List<DeadlineTask> tasks = deadlineTaskRepository.findByUserUserIdAndStatusNot(user.getUserId(), TaskStatus.DONE);
-        for (DeadlineTask task : tasks) {
-            ReminderType type = null;
-            if (task.isOverdue(now)) {
-                type = ReminderType.OVERDUE_ALERT;
-            } else if (task.isDeadlineNear(now)) {
-                type = ReminderType.DEADLINE_WARNING;
-            }
-
-            if (type == null || hasRecentTaskReminder(task, type, now, preference)) {
-                continue;
-            }
-
-            Reminder reminder = reminderRepository.save(new Reminder(
-                    user,
-                    task,
-                    null,
-                    type,
-                    AlertChannel.EMAIL,
-                    deadlineMessage(task, type, now),
-                    now
-            ));
-            sendReminder(reminder);
-            created.add(reminder);
-        }
+        created.addAll(createDailyGoalEmailReminders(user, preference, now));
+        created.addAll(createDeadlineTaskEmailReminders(user, preference, now));
         return created;
     }
 
@@ -161,8 +161,11 @@ public class ReminderService {
         if (reminder.getStatus() != ReminderStatus.PENDING) {
             return false;
         }
+        if (reminder.getChannel() == AlertChannel.EMAIL) {
+            return sendEmailReminder(reminder);
+        }
         reminder.markSent(LocalDateTime.now());
-        reminderHistoryRepository.save(new ReminderHistory(reminder, ReminderStatus.SENT, "sent by local notification stub"));
+        reminderHistoryRepository.save(new ReminderHistory(reminder, ReminderStatus.SENT, "sent by in-site notification"));
         return true;
     }
 
@@ -233,21 +236,173 @@ public class ReminderService {
                 .isEmpty();
     }
 
-    private boolean hasRecentTaskReminder(
-            DeadlineTask task,
+    private List<Task> unfinishedWorkForAvailability(User user, LocalDate today) {
+        List<Task> tasks = new ArrayList<>();
+        tasks.addAll(deadlineTaskRepository.findByUserUserIdAndStatusNot(user.getUserId(), TaskStatus.DONE));
+        for (DailyGoal dailyGoal : dailyGoalRepository.findByUserUserId(user.getUserId())) {
+            if (!dailyGoal.isCompletedOn(today)) {
+                tasks.add(dailyGoal);
+            }
+        }
+        return tasks;
+    }
+
+    private List<Reminder> createDailyGoalEmailReminders(
+            User user,
+            NotificationPreference preference,
+            LocalDateTime now
+    ) {
+        List<Reminder> reminders = new ArrayList<>();
+        LocalDate today = now.toLocalDate();
+        LocalDateTime dayEnd = today.atTime(23, 59);
+        for (DailyGoal dailyGoal : dailyGoalRepository.findByUserUserId(user.getUserId())) {
+            if (dailyGoal.isCompletedOn(today)) {
+                continue;
+            }
+            addIfNotNull(reminders, createEmailReminderIfDue(
+                    user,
+                    dailyGoal,
+                    ReminderType.DAILY_GOAL_DAY_END_ONE_HOUR,
+                    "Daily Goal is due in 1 hour: " + dailyGoal.getTitle(),
+                    dayEnd.minusHours(1),
+                    now,
+                    preference
+            ));
+            addIfNotNull(reminders, createEmailReminderIfDue(
+                    user,
+                    dailyGoal,
+                    ReminderType.DAILY_GOAL_DAY_END_THIRTY_MINUTES,
+                    "Daily Goal is due in 30 minutes: " + dailyGoal.getTitle(),
+                    dayEnd.minusMinutes(30),
+                    now,
+                    preference
+            ));
+        }
+        return reminders;
+    }
+
+    private List<Reminder> createDeadlineTaskEmailReminders(
+            User user,
+            NotificationPreference preference,
+            LocalDateTime now
+    ) {
+        List<Reminder> reminders = new ArrayList<>();
+        List<DeadlineTask> tasks = deadlineTaskRepository.findByUserUserIdAndStatusNot(user.getUserId(), TaskStatus.DONE);
+        for (DeadlineTask task : tasks) {
+            LocalDateTime deadlineAt = task.getDeadlineAt();
+            addIfNotNull(reminders, createEmailReminderIfDue(
+                    user,
+                    task,
+                    ReminderType.DEADLINE_ONE_HOUR,
+                    "Deadline is due in 1 hour: " + task.getTitle(),
+                    deadlineAt.minusHours(1),
+                    now,
+                    preference
+            ));
+            addIfNotNull(reminders, createEmailReminderIfDue(
+                    user,
+                    task,
+                    ReminderType.DEADLINE_THIRTY_MINUTES,
+                    "Deadline is due in 30 minutes: " + task.getTitle(),
+                    deadlineAt.minusMinutes(30),
+                    now,
+                    preference
+            ));
+        }
+        return reminders;
+    }
+
+    private Reminder createEmailReminderIfDue(
+            User user,
+            Task task,
             ReminderType type,
+            String message,
+            LocalDateTime targetTime,
             LocalDateTime now,
             NotificationPreference preference
     ) {
-        LocalDateTime after = now.minusMinutes(preference.getMinimumIntervalMinutes());
-        return !reminderRepository.findByTaskTaskIdAndReminderTypeAndScheduledAtAfter(task.getTaskId(), type, after)
-                .isEmpty();
+        if (!preference.canSend(AlertChannel.EMAIL, type)
+                || !isInTargetWindow(now, targetTime)
+                || hasTaskReminderAtOrAfter(task, type, targetTime)) {
+            return null;
+        }
+
+        Reminder reminder = reminderRepository.save(new Reminder(
+                user,
+                task,
+                null,
+                type,
+                AlertChannel.EMAIL,
+                message,
+                targetTime
+        ));
+        sendReminder(reminder);
+        return reminder;
     }
 
-    private String deadlineMessage(DeadlineTask task, ReminderType type, LocalDateTime now) {
-        if (type == ReminderType.OVERDUE_ALERT) {
-            return "Deadline has passed: " + task.getTitle();
+    private boolean sendEmailReminder(Reminder reminder) {
+        if (!emailDeliveryEnabled) {
+            skipReminder(reminder, "email delivery disabled");
+            return false;
         }
-        return "Deadline is near in " + task.getRemainingHours(now) + " hours: " + task.getTitle();
+
+        JavaMailSender mailSender = mailSenderProvider.getIfAvailable();
+        if (mailSender == null) {
+            return failReminder(reminder, "email sender is not configured");
+        }
+
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(emailFrom);
+            message.setTo(reminder.getUser().getEmail());
+            message.setSubject(emailSubject(reminder));
+            message.setText(reminder.getMessage());
+            mailSender.send(message);
+            reminder.markSent(LocalDateTime.now());
+            reminderHistoryRepository.save(new ReminderHistory(reminder, ReminderStatus.SENT, "sent by smtp"));
+            return true;
+        } catch (MailException exception) {
+            String reason = exception.getMessage();
+            if (reason == null || reason.isBlank()) {
+                reason = exception.getClass().getName();
+            }
+            return failReminder(reminder, reason);
+        }
+    }
+
+    private boolean isInTargetWindow(LocalDateTime now, LocalDateTime targetTime) {
+        return !now.isBefore(targetTime) && now.isBefore(targetTime.plusMinutes(1));
+    }
+
+    private boolean hasTaskReminderAtOrAfter(Task task, ReminderType type, LocalDateTime targetTime) {
+        return !reminderRepository.findByTaskTaskIdAndReminderTypeAndScheduledAtAfter(
+                task.getTaskId(),
+                type,
+                targetTime.minusSeconds(1)
+        ).isEmpty();
+    }
+
+    private String emailSubject(Reminder reminder) {
+        if (reminder.getReminderType() == ReminderType.DAILY_GOAL_DAY_END_ONE_HOUR
+                || reminder.getReminderType() == ReminderType.DAILY_GOAL_DAY_END_THIRTY_MINUTES) {
+            return "Daily goal reminder";
+        }
+        if (reminder.getReminderType() == ReminderType.DEADLINE_ONE_HOUR
+                || reminder.getReminderType() == ReminderType.DEADLINE_THIRTY_MINUTES) {
+            return "Deadline reminder";
+        }
+        return "Task reminder";
+    }
+
+    private boolean failReminder(Reminder reminder, String reason) {
+        reminder.markFailed(reason);
+        reminderHistoryRepository.save(new ReminderHistory(reminder, ReminderStatus.FAILED, reason));
+        return false;
+    }
+
+    private void addIfNotNull(List<Reminder> reminders, Reminder reminder) {
+        if (reminder != null) {
+            reminders.add(reminder);
+        }
     }
 }
