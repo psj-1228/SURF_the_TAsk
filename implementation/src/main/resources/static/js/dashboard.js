@@ -101,7 +101,9 @@
         renderTasks(taskList, asArray(progress.priorityTasks));
         renderAvailability(availability);
         renderReminders(reminders);
-        handleInSiteReminderDisplay(reminders);
+        if (remindersResult.ok) {
+            handleInSiteReminderDisplay(reminders);
+        }
 
         const failed = [progressResult, tasksResult, availabilityResult, remindersResult].filter(function (result) {
             return !result.ok;
