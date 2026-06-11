@@ -26,8 +26,18 @@ public class AuthPageController {
         return "dashboard/index";
     }
 
+    @GetMapping("/schedule")
+    public String schedule() {
+        return "schedule/index";
+    }
+
     @GetMapping("/progress")
     public String progress() {
         return "progress/index";
+    }
+
+    @GetMapping("/focus")
+    public String focus() {
+        return "focus/index";
     }
 }

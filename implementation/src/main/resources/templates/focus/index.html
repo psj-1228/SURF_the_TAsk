@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SURF the TAsk | 집중 모드</title>
+    <link rel="stylesheet" href="/css/focus.css">
+    <script defer src="/js/focus.js"></script>
+</head>
+<body>
+<div class="focus-shell" data-focus-page>
+    <aside class="side-nav" aria-label="주요 메뉴">
+        <a class="side-brand" href="/dashboard" aria-label="SURF the TAsk 대시보드">
+            <span>SURF</span>
+            <strong>the TAsk</strong>
+        </a>
+
+        <nav class="nav-list">
+            <a href="/dashboard">대시보드</a>
+            <a href="/schedule">개인 시간표</a>
+            <a href="/dashboard#daily-goals">매일 목표</a>
+            <a href="/dashboard#deadline-tasks">마감 업무</a>
+            <a class="active" href="/focus">집중 모드</a>
+            <a href="/progress">진행 현황</a>
+        </nav>
+    </aside>
+
+    <main class="focus-main">
+        <header class="focus-topbar">
+            <div>
+                <p class="eyebrow">Focus voyage</p>
+                <h1>집중 모드</h1>
+                <p data-focus-date>오늘의 항해를 준비하는 중입니다.</p>
+            </div>
+            <div class="topbar-actions">
+                <a class="ghost-link" href="/dashboard">대시보드</a>
+                <button class="ghost-button" type="button" data-logout>로그아웃</button>
+            </div>
+        </header>
+
+        <section class="focus-stage" aria-label="집중 항해 화면">
+            <div class="voyage-scene" aria-hidden="true">
+                <span class="map-glow"></span>
+                <span class="map-grid"></span>
+                <span class="map-island island-one"></span>
+                <span class="map-island island-two"></span>
+                <span class="map-island island-three"></span>
+                <svg class="route-map" viewBox="0 0 720 520" preserveAspectRatio="none" data-voyage-route>
+                    <path class="route-shadow" d="M80 420 C190 330 230 250 340 285 C455 320 470 410 590 340 C650 305 660 235 620 160"></path>
+                    <path class="route-track" d="M80 420 C190 330 230 250 340 285 C455 320 470 410 590 340 C650 305 660 235 620 160"></path>
+                    <circle class="route-port port-start" cx="80" cy="420" r="11"></circle>
+                    <circle class="route-port port-mid" cx="340" cy="285" r="8"></circle>
+                    <circle class="route-port port-end" cx="620" cy="160" r="12"></circle>
+                </svg>
+                <span class="route-boat" data-route-boat>
+                    <span class="route-mast"></span>
+                    <span class="route-sail route-sail-main"></span>
+                    <span class="route-sail route-sail-side"></span>
+                    <span class="route-hull"></span>
+                </span>
+                <span class="compass-rose">N</span>
+            </div>
+
+            <article class="timer-panel" aria-label="현재 집중 세션">
+                <span class="status-pill" data-focus-state>집중 모드 대기</span>
+                <p class="eyebrow">집중하고 있는 업무</p>
+                <h2 data-focus-task-title>자유 항해</h2>
+                <p data-focus-task-detail>과제를 선택하거나 비워두고 바로 시작할 수 있습니다.</p>
+
+                <div class="timer-ring" data-progress-ring style="--timer-progress: 0deg;">
+                    <div class="timer-core">
+                        <strong data-focus-timer>25:00</strong>
+                        <span data-remaining-label data-time-mode-label>남은 시간</span>
+                    </div>
+                </div>
+
+                <div class="focus-actions">
+                    <button class="control-button" type="button" data-toggle-pause disabled>일시정지</button>
+                    <button class="exit-button" type="button" data-open-exit-confirm disabled>집중 모드 종료</button>
+                </div>
+            </article>
+
+            <aside class="control-dock" aria-label="집중 모드 설정">
+                <section class="dock-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <p class="eyebrow">Task</p>
+                            <h2>항해 목표</h2>
+                        </div>
+                    </div>
+                    <label class="task-select-label">
+                        <span>수행할 과제</span>
+                        <select data-task-select>
+                            <option value="">과제 선택 안 함</option>
+                        </select>
+                    </label>
+                    <button class="primary-button" type="button" data-start-focus>집중 시작</button>
+                </section>
+
+                <section class="dock-panel compact">
+                    <div class="panel-heading">
+                        <div>
+                            <p class="eyebrow">Voyage</p>
+                            <h2>항해 상태</h2>
+                        </div>
+                    </div>
+                    <dl class="session-stats">
+                        <div>
+                            <dt>세션</dt>
+                            <dd data-session-kind>대기 중</dd>
+                        </div>
+                        <div>
+                            <dt>경과</dt>
+                            <dd data-elapsed-time>0분</dd>
+                        </div>
+                        <div>
+                            <dt>목표</dt>
+                            <dd data-session-target>자유 항해</dd>
+                        </div>
+                    </dl>
+                </section>
+
+                <section class="notice-panel" aria-label="집중 알림">
+                    <strong>알림</strong>
+                    <p data-focus-message role="status" aria-live="polite">집중할 과제를 선택하거나 비워둔 채 시작하세요.</p>
+                </section>
+            </aside>
+        </section>
+    </main>
+</div>
+
+<div class="modal-backdrop" data-exit-confirm-modal hidden>
+    <section class="exit-modal" role="dialog" aria-modal="true" aria-labelledby="exit-modal-title">
+        <div class="modal-header">
+            <div>
+                <p class="eyebrow">Focus off</p>
+                <h2 id="exit-modal-title">집중 모드를 종료하시겠습니까?</h2>
+            </div>
+            <button class="icon-button" type="button" aria-label="닫기" data-keep-focus>&times;</button>
+        </div>
+
+        <p>진행 중인 집중 시간이 저장되지 않을 수 있습니다. 아직 집중 중이라면 항해를 계속 이어가세요.</p>
+
+        <label class="complete-check" data-complete-wrap>
+            <input type="checkbox" data-complete-task>
+            <span>선택한 과제를 완료 처리합니다.</span>
+        </label>
+
+        <div class="modal-actions">
+            <button class="control-button" type="button" data-keep-focus>계속 집중하기</button>
+            <button class="exit-button" type="button" data-confirm-exit>종료하기</button>
+        </div>
+    </section>
+</div>
+</body>
+</html>

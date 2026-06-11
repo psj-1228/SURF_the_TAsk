@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SURF the TAsk | 개인 시간표</title>
+    <link rel="stylesheet" href="/css/schedule.css">
+    <script defer src="/js/schedule.js"></script>
+</head>
+<body>
+<div class="schedule-shell" data-schedule-page>
+    <aside class="side-nav" aria-label="주요 메뉴">
+        <a class="side-brand" href="/dashboard" aria-label="SURF the TAsk 대시보드">
+            <span>SURF</span>
+            <strong>the TAsk</strong>
+        </a>
+
+        <nav class="nav-list">
+            <a href="/dashboard">대시보드</a>
+            <a class="active" href="/schedule">개인 시간표</a>
+            <a href="/dashboard#daily-goals">매일 목표</a>
+            <a href="/dashboard#deadline-tasks">마감 업무</a>
+            <a href="/focus">집중 모드</a>
+            <a href="/progress">진행 현황</a>
+        </nav>
+    </aside>
+
+    <main class="schedule-main">
+        <header class="schedule-topbar">
+            <div>
+                <p class="eyebrow">Personal schedule</p>
+                <h1>개인 시간표</h1>
+                <p data-schedule-date>오늘의 시간표를 불러오는 중입니다.</p>
+            </div>
+            <div class="topbar-actions">
+                <a class="ghost-link" href="/dashboard">대시보드</a>
+                <button class="ghost-button" type="button" data-logout>로그아웃</button>
+            </div>
+        </header>
+
+        <section class="schedule-summary" aria-label="개인 시간표 요약">
+            <article class="summary-item">
+                <span>등록 일정</span>
+                <strong data-schedule-count>0</strong>
+                <small>이번 주 반복 기준</small>
+            </article>
+            <article class="summary-item">
+                <span>가능 시간</span>
+                <strong data-availability-hours>0h</strong>
+                <small>07시 이후 빈 시간</small>
+            </article>
+            <article class="summary-item">
+                <span>가장 빠른 가능 시간</span>
+                <strong data-next-availability>--:--</strong>
+                <small data-next-availability-day>일정 없음</small>
+            </article>
+        </section>
+
+        <section class="schedule-workspace">
+            <article class="timetable-panel" aria-label="주간 개인 시간표">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Weekly table</p>
+                        <h2>이번 주 시간표</h2>
+                    </div>
+                    <span class="range-badge">07:00 - 24:00</span>
+                </div>
+                <div class="board-scroll">
+                    <div class="schedule-board" data-schedule-grid></div>
+                </div>
+            </article>
+
+            <aside class="schedule-side">
+                <section class="editor-panel" aria-label="개인 일정 등록">
+                    <div class="panel-heading">
+                        <div>
+                            <p class="eyebrow">Add schedule</p>
+                            <h2>일정 추가</h2>
+                        </div>
+                    </div>
+
+                    <form class="schedule-form" data-schedule-form>
+                        <label>
+                            <span>과목 / 일정명</span>
+                            <input name="title" type="text" maxlength="100" placeholder="예: 자료구조" required>
+                        </label>
+
+                        <label>
+                            <span>요일</span>
+                            <select name="dayOfWeek" required>
+                                <option value="MONDAY">월요일</option>
+                                <option value="TUESDAY">화요일</option>
+                                <option value="WEDNESDAY">수요일</option>
+                                <option value="THURSDAY">목요일</option>
+                                <option value="FRIDAY">금요일</option>
+                            </select>
+                        </label>
+
+                        <div class="form-row">
+                            <label>
+                                <span>시작 시간</span>
+                                <input name="startTime" type="time" min="07:00" max="23:30" value="09:00" required>
+                            </label>
+                            <label>
+                                <span>종료 시간</span>
+                                <input name="endTime" type="time" min="07:30" max="23:59" value="10:15" required>
+                            </label>
+                        </div>
+
+                        <label>
+                            <span>반복</span>
+                            <select name="repeatType" required>
+                                <option value="WEEKLY">매주 반복</option>
+                                <option value="NONE">반복 없음</option>
+                                <option value="DAILY">매일 반복</option>
+                            </select>
+                        </label>
+
+                        <p class="form-message" data-schedule-form-message role="status" aria-live="polite"></p>
+
+                        <div class="form-actions">
+                            <button class="small-button" type="reset">취소</button>
+                            <button class="primary-button" type="submit">저장</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="availability-panel" aria-label="가능 시간">
+                    <div class="panel-heading compact">
+                        <div>
+                            <p class="eyebrow">Available</p>
+                            <h2>가능 시간</h2>
+                        </div>
+                    </div>
+                    <div class="availability-list" data-availability-list></div>
+                </section>
+
+                <section class="list-panel" aria-label="등록된 일정">
+                    <div class="panel-heading compact">
+                        <div>
+                            <p class="eyebrow">Schedules</p>
+                            <h2>등록된 일정</h2>
+                        </div>
+                    </div>
+                    <div class="registered-list" data-schedule-list></div>
+                </section>
+            </aside>
+        </section>
+
+        <p class="load-message" data-schedule-message role="status" aria-live="polite"></p>
+    </main>
+</div>
+</body>
+</html>

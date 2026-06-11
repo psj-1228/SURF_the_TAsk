@@ -9,6 +9,8 @@ public interface FocusSessionRepository extends JpaRepository<FocusSession, Long
 
     Optional<FocusSession> findByUserUserIdAndActiveTrue(Long userId);
 
+    List<FocusSession> findByUserUserIdAndEndAtIsNotNull(Long userId);
+
     List<FocusSession> findByActiveTrue();
 
     void deleteByTaskTaskId(Long taskId);

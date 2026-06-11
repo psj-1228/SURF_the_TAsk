@@ -33,6 +33,10 @@ body {
             var(--page);
 }
 
+body.modal-open {
+    overflow: hidden;
+}
+
 a {
     color: inherit;
     text-decoration: none;
@@ -40,6 +44,7 @@ a {
 
 button {
     font: inherit;
+    max-width: 100%;
 }
 
 .app-shell {
@@ -99,33 +104,6 @@ button {
 .nav-list a.active {
     color: #ffffff;
     background: rgba(23, 107, 210, 0.72);
-}
-
-.focus-entry {
-    position: absolute;
-    left: 18px;
-    right: 18px;
-    bottom: 24px;
-    padding: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 8px;
-    background: rgba(16, 168, 160, 0.14);
-}
-
-.focus-entry span,
-.focus-entry strong {
-    display: block;
-}
-
-.focus-entry span {
-    color: rgba(255, 255, 255, 0.74);
-    font-size: 12px;
-    font-weight: 800;
-}
-
-.focus-entry strong {
-    margin-top: 4px;
-    color: var(--mint);
 }
 
 .dashboard {
@@ -189,6 +167,8 @@ button {
     border-radius: 8px;
     cursor: pointer;
     font-weight: 900;
+    text-align: center;
+    white-space: nowrap;
 }
 
 .progress-link,
@@ -219,6 +199,18 @@ button {
     color: #b7322c;
 }
 
+.add-button {
+    border-color: rgba(23, 107, 210, 0.22);
+    background: rgba(23, 107, 210, 0.1);
+    color: var(--blue);
+}
+
+.add-button.warning {
+    border-color: rgba(232, 92, 87, 0.28);
+    background: rgba(232, 92, 87, 0.1);
+    color: var(--coral);
+}
+
 button:disabled {
     cursor: progress;
     opacity: 0.62;
@@ -229,17 +221,6 @@ button:disabled {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 14px;
     margin-bottom: 18px;
-}
-
-.task-workspace {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 18px;
-    margin-bottom: 18px;
-}
-
-.task-form-panel {
-    box-shadow: none;
 }
 
 .task-form,
@@ -281,6 +262,90 @@ button:disabled {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
+}
+
+.task-modal .form-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.form-row.single {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.modal-backdrop[hidden],
+[hidden] {
+    display: none !important;
+}
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    background: rgba(3, 29, 51, 0.44);
+    backdrop-filter: blur(10px);
+}
+
+.task-modal {
+    width: min(540px, calc(100vw - 28px));
+    max-height: calc(100vh - 28px);
+    overflow-y: auto;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    border-radius: 8px;
+    background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 251, 253, 0.98)),
+            #ffffff;
+    box-shadow: 0 24px 70px rgba(3, 29, 51, 0.28);
+    padding: 22px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    align-items: flex-start;
+    margin-bottom: 18px;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 22px;
+    line-height: 1.28;
+}
+
+.icon-button {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 auto;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--navy);
+    cursor: pointer;
+    font-size: 24px;
+    line-height: 1;
+}
+
+.form-message {
+    min-height: 20px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.form-message.error {
+    color: #b7322c;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 .summary-item,
@@ -332,6 +397,14 @@ button:disabled {
     margin-bottom: 18px;
 }
 
+.panel-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
 .panel-heading h2 {
     margin: 0;
     font-size: 19px;
@@ -342,54 +415,279 @@ button:disabled {
     font-size: 26px;
 }
 
-.wave-visual {
+.beach-visual {
     position: relative;
     min-height: 236px;
     overflow: hidden;
     border-radius: 8px;
     background:
-            linear-gradient(180deg, #dff6ff 0%, #eefbff 42%, #f7fdff 100%);
+            radial-gradient(circle at 17% 18%, rgba(255, 229, 139, 0.88) 0 42px, transparent 44px),
+            linear-gradient(180deg, #b9ebff 0%, #eaf9ff 46%, #ffe2b0 47%, #f7ca83 100%);
+    isolation: isolate;
 }
 
-.wave-fill {
+.beach-visual::before,
+.beach-visual::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+}
+
+.beach-visual::before {
+    left: -8%;
+    right: -8%;
+    bottom: 30%;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, rgba(255, 237, 195, 0.4), rgba(218, 164, 92, 0.24));
+    transform: rotate(-2deg);
+    z-index: 1;
+}
+
+.beach-visual::after {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 48%;
+    background:
+            radial-gradient(circle at 16% 78%, rgba(142, 91, 50, 0.18) 0 2px, transparent 3px),
+            radial-gradient(circle at 35% 65%, rgba(255, 255, 255, 0.26) 0 2px, transparent 3px),
+            radial-gradient(circle at 72% 82%, rgba(142, 91, 50, 0.15) 0 2px, transparent 3px),
+            repeating-linear-gradient(165deg, rgba(130, 85, 44, 0.12) 0 1px, transparent 1px 20px),
+            linear-gradient(180deg, #ffe0a6, #e8b969);
+    z-index: 2;
+}
+
+.beach-sun {
+    position: absolute;
+    left: 26px;
+    top: 22px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #fff1a8, #f2b544);
+    box-shadow: 0 0 0 12px rgba(242, 181, 68, 0.14), 0 12px 24px rgba(190, 117, 41, 0.18);
+    z-index: 2;
+}
+
+.beach-cloud {
+    position: absolute;
+    height: 24px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.78);
+    box-shadow: 24px 2px 0 rgba(255, 255, 255, 0.64), 46px -2px 0 rgba(255, 255, 255, 0.5);
+    z-index: 1;
+    pointer-events: none;
+}
+
+.cloud-one {
+    left: 38%;
+    top: 24px;
+    width: 54px;
+}
+
+.cloud-two {
+    right: 18%;
+    top: 56px;
+    width: 42px;
+    opacity: 0.72;
+}
+
+.sand-shore {
     position: absolute;
     left: -8%;
     right: -8%;
-    bottom: 0;
-    height: var(--wave-level);
-    min-height: 32px;
-    border-radius: 48% 48% 0 0;
-    background: linear-gradient(120deg, #39bdd4, var(--blue) 58%, #0a4e86);
-    transition: height 260ms ease;
+    bottom: 32%;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(90deg, rgba(255, 250, 232, 0.38), rgba(173, 111, 62, 0.18), rgba(255, 250, 232, 0.3));
+    transform: rotate(1.5deg);
+    z-index: 3;
 }
 
-.wave-fill::before {
+.sand-ripple {
+    position: absolute;
+    height: 20px;
+    border: 2px solid rgba(128, 82, 43, 0.16);
+    border-color: rgba(128, 82, 43, 0.16) transparent transparent transparent;
+    border-radius: 50%;
+    z-index: 4;
+}
+
+.ripple-one {
+    left: 14%;
+    bottom: 21%;
+    width: 130px;
+    transform: rotate(-8deg);
+}
+
+.ripple-two {
+    right: 10%;
+    bottom: 14%;
+    width: 160px;
+    transform: rotate(7deg);
+}
+
+.beach-pebble {
+    position: absolute;
+    width: 12px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(111, 77, 49, 0.32);
+    z-index: 4;
+}
+
+.pebble-one {
+    left: 11%;
+    bottom: 15%;
+}
+
+.pebble-two {
+    right: 18%;
+    bottom: 24%;
+    width: 9px;
+    background: rgba(202, 123, 87, 0.38);
+}
+
+.achievement-stack {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 24px;
+    z-index: 5;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    pointer-events: none;
+}
+
+.achievement-badge {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    min-height: 72px;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    border-radius: 8px;
+    background: rgba(255, 251, 238, 0.86);
+    box-shadow: 0 12px 28px rgba(112, 76, 44, 0.16);
+    padding: 10px;
+    backdrop-filter: blur(8px);
+}
+
+.achievement-copy {
+    min-width: 0;
+}
+
+.achievement-copy small,
+.achievement-copy strong {
+    display: block;
+}
+
+.achievement-copy small {
+    color: #57718b;
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.achievement-copy strong {
+    margin-top: 4px;
+    color: var(--navy);
+    font-size: 22px;
+    line-height: 1;
+}
+
+.achievement-shell,
+.achievement-conch {
+    position: relative;
+    display: block;
+    width: 48px;
+    height: 48px;
+    filter: drop-shadow(0 8px 10px rgba(116, 64, 58, 0.16));
+    animation: shellFloat 4.6s ease-in-out infinite;
+}
+
+.achievement-shell {
+    border-radius: 50% 50% 42% 42%;
+    background:
+            radial-gradient(circle at 50% 88%, #fffdf8 0 8px, transparent 9px),
+            linear-gradient(135deg, #fff2d6, #ffb5a8 58%, #f17d83);
+    clip-path: polygon(50% 5%, 92% 70%, 76% 96%, 24% 96%, 8% 70%);
+}
+
+.achievement-shell::before {
     content: "";
     position: absolute;
-    left: 8%;
-    top: -18px;
-    width: 84%;
-    height: 42px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.74);
-}
-
-.wave-crest {
-    position: absolute;
-    bottom: calc(var(--wave-level) - 8px);
-    width: 120px;
-    height: 38px;
+    left: 9px;
+    right: 9px;
+    bottom: 8px;
+    height: 7px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.72);
+    background: rgba(255, 255, 255, 0.66);
 }
 
-.crest-one {
-    left: 16%;
+.shell-ridge {
+    position: absolute;
+    left: 50%;
+    bottom: 8px;
+    width: 2px;
+    height: 34px;
+    border-radius: 999px;
+    background: rgba(134, 68, 96, 0.26);
+    transform-origin: bottom center;
 }
 
-.crest-two {
-    right: 18%;
-    transform: scale(0.72);
+.ridge-one {
+    transform: translateX(-50%) rotate(-24deg);
+}
+
+.ridge-two {
+    transform: translateX(-50%);
+}
+
+.ridge-three {
+    transform: translateX(-50%) rotate(24deg);
+}
+
+.achievement-conch {
+    border-radius: 50%;
+    background:
+            radial-gradient(circle at 30% 35%, #fff7e9 0 9px, transparent 10px),
+            radial-gradient(circle at 62% 58%, #ffd6b3 0 18px, transparent 19px),
+            linear-gradient(135deg, #f7a26d, #ffcf99 62%, #fff4df);
+    clip-path: polygon(8% 46%, 36% 14%, 76% 18%, 96% 48%, 78% 78%, 35% 90%, 16% 70%);
+    animation-delay: -1.4s;
+}
+
+.achievement-conch::before {
+    content: "";
+    position: absolute;
+    right: 3px;
+    top: 16px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 5px solid rgba(255, 255, 255, 0.62);
+    border-left-color: rgba(160, 82, 62, 0.18);
+}
+
+.conch-ring {
+    position: absolute;
+    left: 11px;
+    width: 30px;
+    height: 3px;
+    border-radius: 999px;
+    background: rgba(157, 83, 57, 0.25);
+    transform: rotate(-22deg);
+}
+
+.ring-one {
+    top: 18px;
+}
+
+.ring-two {
+    top: 29px;
 }
 
 .panel-note {
@@ -613,10 +911,6 @@ button:disabled {
         overflow-x: auto;
     }
 
-    .focus-entry {
-        display: none;
-    }
-
     .dashboard {
         padding: 26px 22px 34px;
     }
@@ -625,8 +919,7 @@ button:disabled {
 @media (max-width: 860px) {
     .summary-grid,
     .main-grid,
-    .content-grid,
-    .task-workspace {
+    .content-grid {
         grid-template-columns: 1fr;
     }
 
@@ -654,11 +947,77 @@ button:disabled {
     }
 
     .form-row,
+    .task-modal .form-row,
     .task-view {
         grid-template-columns: 1fr;
     }
 
+    .panel-heading {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .panel-actions {
+        justify-content: flex-start;
+    }
+
+    .modal-actions {
+        justify-content: stretch;
+    }
+
+    .modal-actions .small-button,
+    .modal-actions .primary-button {
+        width: 100%;
+    }
+
     .task-actions {
         justify-content: flex-start;
+    }
+
+    .achievement-stack {
+        position: relative;
+        left: auto;
+        right: auto;
+        bottom: auto;
+        grid-template-columns: 1fr;
+        top: auto;
+        padding: 12px;
+    }
+
+    .achievement-badge {
+        min-height: 58px;
+        grid-template-columns: 42px minmax(0, 1fr);
+        padding: 8px;
+    }
+
+    .achievement-shell,
+    .achievement-conch {
+        width: 40px;
+        height: 40px;
+    }
+
+    .achievement-copy strong {
+        font-size: 19px;
+    }
+
+    .beach-visual {
+        min-height: 310px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .achievement-shell,
+    .achievement-conch {
+        animation: none;
+    }
+}
+
+@keyframes shellFloat {
+    0%,
+    100% {
+        transform: translateY(0) rotate(-2deg);
+    }
+    50% {
+        transform: translateY(-5px) rotate(2deg);
     }
 }

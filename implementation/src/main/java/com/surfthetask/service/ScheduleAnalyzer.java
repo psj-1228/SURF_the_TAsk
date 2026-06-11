@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ScheduleAnalyzer {
 
-    private static final LocalTime DAY_START = LocalTime.MIN;
+    private static final LocalTime DAY_START = LocalTime.of(7, 0);
     private static final LocalTime DAY_END = LocalTime.of(23, 59);
 
     public List<AvailabilitySlot> calculateAvailability(List<PersonalSchedule> schedules) {

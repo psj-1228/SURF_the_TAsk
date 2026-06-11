@@ -60,6 +60,22 @@ public class AuthService {
         return LoginResDto.of(user, jwtTokenProvider.issue(user));
     }
 
+    @Transactional
+    public LoginResDto developmentLogin(String loginId, String password, String name, String email) {
+        User user = userRepository.findByLoginId(loginId)
+                .map(existingUser -> {
+                    existingUser.changePassword(hash(password));
+                    existingUser.updateProfile(name, existingUser.getEmail());
+                    return existingUser;
+                })
+                .orElseGet(() -> userRepository.save(new User(loginId, hash(password), name, email)));
+
+        notificationPreferenceRepository.findByUserUserId(user.getUserId())
+                .orElseGet(() -> notificationPreferenceRepository.save(new NotificationPreference(user)));
+
+        return LoginResDto.of(user, jwtTokenProvider.issue(user));
+    }
+
     public void logout(Long userId) {
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("user not found: " + userId);

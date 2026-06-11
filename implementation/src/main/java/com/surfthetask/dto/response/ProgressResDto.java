@@ -9,6 +9,16 @@ public record ProgressResDto(
         Integer incompleteTasks,
         Double completionRate,
         Integer bestDailyGoalStreak,
-        List<TaskResDto> priorityTasks
+        Integer totalFocusMinutes,
+        Integer completedGoalCount,
+        Double currentWeekCompletionRate,
+        Double previousWeekCompletionRate,
+        Double weeklyCompletionRateDelta,
+        List<DailyCompletionRateResDto> dailyCompletionRates,
+        List<TaskResDto> priorityTasks,
+        Integer todayCompletedDailyGoals,
+        Integer todayCompletedDeadlineTasks,
+        Integer todayCompletedTasks,
+        Double todayCompletionRate
 ) {
 }

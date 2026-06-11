@@ -1,6 +1,7 @@
 (function () {
     const storageKey = "surfUser";
     const user = readStoredUser();
+    let lastFocusedElement = null;
 
     if (!user.token) {
         window.location.href = "/login";
@@ -13,12 +14,18 @@
         todayLabel: document.querySelector("[data-today-label]"),
         logout: document.querySelector("[data-logout]"),
         loadMessage: document.querySelector("[data-load-message]"),
-        dailyGoalForm: document.querySelector("[data-daily-goal-form]"),
-        deadlineTaskForm: document.querySelector("[data-deadline-task-form]"),
+        taskModal: document.querySelector("[data-task-modal]"),
+        taskCreateForm: document.querySelector("[data-task-create-form]"),
+        taskModalTitle: document.querySelector("[data-task-modal-title]"),
+        taskModalEyebrow: document.querySelector("[data-task-modal-eyebrow]"),
+        taskModalMessage: document.querySelector("[data-task-modal-message]"),
+        taskModalSubmit: document.querySelector("[data-task-modal-submit]"),
+        dailyFields: document.querySelector("[data-daily-fields]"),
+        deadlineFields: document.querySelector("[data-deadline-fields]"),
         completionRate: document.querySelector("[data-completion-rate]"),
-        waveRate: document.querySelector("[data-wave-rate]"),
-        waveVisual: document.querySelector("[data-wave-visual]"),
-        waveNote: document.querySelector("[data-wave-note]"),
+        achievementNote: document.querySelector("[data-achievement-note]"),
+        todayDailyGoalCount: document.querySelector("[data-today-daily-goal-count]"),
+        todayDeadlineTaskCount: document.querySelector("[data-today-deadline-task-count]"),
         doneTasks: document.querySelector("[data-done-tasks]"),
         totalTasks: document.querySelector("[data-total-tasks]"),
         incompleteTasks: document.querySelector("[data-incomplete-tasks]"),
@@ -42,10 +49,22 @@
         weekday: "long"
     }).format(new Date());
 
-    setDefaultDeadline();
     refs.logout.addEventListener("click", logout);
-    refs.dailyGoalForm.addEventListener("submit", handleDailyGoalCreate);
-    refs.deadlineTaskForm.addEventListener("submit", handleDeadlineTaskCreate);
+    refs.taskCreateForm.addEventListener("submit", handleTaskCreate);
+    refs.taskModal.addEventListener("click", handleModalBackdropClick);
+    document.querySelectorAll("[data-close-task-modal]").forEach(function (button) {
+        button.addEventListener("click", closeTaskModal);
+    });
+    document.querySelectorAll("[data-open-task-modal]").forEach(function (button) {
+        button.addEventListener("click", function () {
+            openTaskModal(button.dataset.openTaskModal);
+        });
+    });
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && !refs.taskModal.hidden) {
+            closeTaskModal();
+        }
+    });
     refs.dashboard.addEventListener("click", handleTaskClick);
     refs.dashboard.addEventListener("submit", handleTaskEdit);
 
@@ -95,41 +114,85 @@
         }
     }
 
-    async function handleDailyGoalCreate(event) {
+    function openTaskModal(kind) {
+        const isDaily = kind === "daily";
+        const form = refs.taskCreateForm;
+
+        lastFocusedElement = document.activeElement;
+        form.reset();
+        clearTaskModalMessage();
+        form.dataset.taskType = isDaily ? "DAILY_GOAL" : "DEADLINE_TASK";
+        refs.taskModalEyebrow.textContent = isDaily ? "Daily Goal" : "Task";
+        refs.taskModalTitle.textContent = isDaily ? "Daily Goal 추가" : "Task 추가";
+        refs.taskModalSubmit.textContent = isDaily ? "Daily Goal 추가" : "Task 추가";
+
+        form.elements.estimatedMinutes.value = isDaily ? "30" : "60";
+        form.elements.importance.value = isDaily ? "3" : "4";
+        form.elements.targetCountPerDay.required = isDaily;
+        form.elements.deadlineAt.required = !isDaily;
+        form.elements.warningThresholdHours.required = !isDaily;
+        refs.dailyFields.hidden = !isDaily;
+        refs.deadlineFields.hidden = isDaily;
+
+        if (!isDaily) {
+            setDefaultDeadline();
+        }
+
+        refs.taskModal.hidden = false;
+        document.body.classList.add("modal-open");
+        window.setTimeout(function () {
+            form.elements.title.focus();
+        }, 0);
+    }
+
+    function closeTaskModal() {
+        refs.taskModal.hidden = true;
+        refs.taskCreateForm.reset();
+        clearTaskModalMessage();
+        document.body.classList.remove("modal-open");
+
+        if (lastFocusedElement && typeof lastFocusedElement.focus === "function") {
+            lastFocusedElement.focus();
+        }
+    }
+
+    function handleModalBackdropClick(event) {
+        if (event.target === refs.taskModal) {
+            closeTaskModal();
+        }
+    }
+
+    async function handleTaskCreate(event) {
         event.preventDefault();
-        if (!refs.dailyGoalForm.reportValidity()) {
+
+        const form = refs.taskCreateForm;
+        const isDaily = form.dataset.taskType === "DAILY_GOAL";
+
+        if (!form.reportValidity()) {
             return;
         }
 
-        const payload = readTaskForm(refs.dailyGoalForm);
-        payload.targetCountPerDay = numberValue(refs.dailyGoalForm.elements.targetCountPerDay.value);
-        await submitTaskForm(refs.dailyGoalForm, "/api/tasks/daily-goals", payload, "Daily Goal을 추가했습니다.");
-    }
+        const payload = readTaskForm(form);
+        const url = isDaily ? "/api/tasks/daily-goals" : "/api/tasks/deadline-tasks";
+        const successMessage = isDaily ? "Daily Goal을 추가했습니다." : "Task를 추가했습니다.";
 
-    async function handleDeadlineTaskCreate(event) {
-        event.preventDefault();
-        if (!refs.deadlineTaskForm.reportValidity()) {
-            return;
+        if (isDaily) {
+            payload.targetCountPerDay = numberValue(form.elements.targetCountPerDay.value);
+        } else {
+            payload.deadlineAt = form.elements.deadlineAt.value;
+            payload.warningThresholdHours = numberValue(form.elements.warningThresholdHours.value);
         }
 
-        const payload = readTaskForm(refs.deadlineTaskForm);
-        payload.deadlineAt = refs.deadlineTaskForm.elements.deadlineAt.value;
-        payload.warningThresholdHours = numberValue(refs.deadlineTaskForm.elements.warningThresholdHours.value);
-        await submitTaskForm(refs.deadlineTaskForm, "/api/tasks/deadline-tasks", payload, "Deadline Task를 추가했습니다.");
-    }
-
-    async function submitTaskForm(form, url, payload, successMessage) {
         setFormBusy(form, true);
         const result = await sendJson(url, "POST", payload);
         setFormBusy(form, false);
 
         if (!result.ok) {
-            setMessage(formatError(result.data), true);
+            setTaskModalMessage(formatError(result.data), true);
             return;
         }
 
-        form.reset();
-        setDefaultDeadline();
+        closeTaskModal();
         setMessage(successMessage);
         await loadDashboard();
     }
@@ -285,10 +348,16 @@
         };
     }
 
-    function readJson(response) {
-        return response.text().then(function (text) {
-            return text ? JSON.parse(text) : null;
-        });
+    async function readJson(response) {
+        const text = await response.text();
+        if (!text) {
+            return null;
+        }
+        try {
+            return JSON.parse(text);
+        } catch (error) {
+            return text;
+        }
     }
 
     function isUnauthorized(result) {
@@ -311,12 +380,15 @@
 
     function renderProgress(progress) {
         const rate = clamp(Math.round(progress.completionRate || 0), 0, 100);
+        const todayDailyGoals = numberOrZero(progress.todayCompletedDailyGoals);
+        const todayDeadlineTasks = numberOrZero(progress.todayCompletedDeadlineTasks);
+        const todayCompletedTasks = numberOr(progress.todayCompletedTasks, todayDailyGoals + todayDeadlineTasks);
         refs.completionRate.textContent = rate + "%";
-        refs.waveRate.textContent = rate + "%";
-        refs.waveVisual.style.setProperty("--wave-level", Math.max(rate, 12) + "%");
-        refs.waveNote.textContent = rate >= 80
-                ? "진행도가 좋습니다. 이 흐름을 유지하세요."
-                : "완료 체크가 쌓이면 진행도 파도가 높아집니다.";
+        refs.todayDailyGoalCount.textContent = todayDailyGoals;
+        refs.todayDeadlineTaskCount.textContent = todayDeadlineTasks;
+        refs.achievementNote.textContent = todayCompletedTasks > 0
+                ? "오늘 Daily Goal " + todayDailyGoals + "개와 Task " + todayDeadlineTasks + "개를 완료했어요."
+                : "오늘 완료한 Daily Goal과 Task가 아직 없습니다.";
         refs.doneTasks.textContent = progress.doneTasks || 0;
         refs.totalTasks.textContent = "전체 " + (progress.totalTasks || 0) + "개";
         refs.incompleteTasks.textContent = progress.incompleteTasks || 0;
@@ -345,7 +417,7 @@
         refs.deadlineCount.textContent = deadlineTasks.length;
 
         renderTaskList(refs.dailyList, dailyGoals, "아직 Daily Goal이 없습니다.");
-        renderTaskList(refs.deadlineList, deadlineTasks, "아직 Deadline Task가 없습니다.");
+        renderTaskList(refs.deadlineList, deadlineTasks, "아직 Task가 없습니다.");
         renderPriorityList(priority);
     }
 
@@ -393,12 +465,14 @@
     }
 
     function taskMarkup(task) {
-        const type = task.taskType === "DAILY_GOAL" ? "Daily Goal" : "Deadline Task";
+        const type = task.taskType === "DAILY_GOAL" ? "Daily Goal" : "Task";
         const time = task.estimatedMinutes ? task.estimatedMinutes + "분" : "시간 미설정";
         const subtype = task.taskType === "DAILY_GOAL"
                 ? "Streak " + (task.currentStreak || 0) + "일"
                 : "마감 " + formatDateTime(task.deadlineAt);
-        const detail = task.description || (task.taskType === "DAILY_GOAL" ? "하루 목표 " + (task.targetCountPerDay || 1) + "회" : subtype);
+        const detail = task.description || (task.taskType === "DAILY_GOAL"
+                ? "하루 목표 " + (task.targetCountPerDay || 1) + "회"
+                : subtype);
 
         return "<div class=\"task-main\">"
                 + "<strong>" + escapeHtml(task.title || "제목 없음") + "</strong>"
@@ -425,8 +499,7 @@
     }
 
     function editFormMarkup(task) {
-        const isDaily = task.taskType === "DAILY_GOAL";
-        const subtypeFields = isDaily ? dailyEditFields(task) : deadlineEditFields(task);
+        const subtypeFields = task.taskType === "DAILY_GOAL" ? dailyEditFields(task) : deadlineEditFields(task);
 
         return "<form class=\"task-edit-form\" data-edit-form data-task-id=\"" + task.taskId
                 + "\" data-task-type=\"" + task.taskType + "\">"
@@ -513,14 +586,25 @@
     }
 
     function fallbackProgress(tasks) {
-        const done = asArray(tasks).filter(function (task) { return task.status === "DONE"; }).length;
+        const taskList = asArray(tasks);
+        const done = taskList.filter(function (task) { return task.status === "DONE"; }).length;
+        const doneDailyGoals = taskList.filter(function (task) {
+            return task.taskType === "DAILY_GOAL" && task.status === "DONE";
+        }).length;
+        const doneDeadlineTasks = taskList.filter(function (task) {
+            return task.taskType === "DEADLINE_TASK" && task.status === "DONE";
+        }).length;
         return {
-            totalTasks: asArray(tasks).length,
+            totalTasks: taskList.length,
             doneTasks: done,
-            incompleteTasks: asArray(tasks).length - done,
-            completionRate: asArray(tasks).length === 0 ? 0 : done / asArray(tasks).length * 100,
+            incompleteTasks: taskList.length - done,
+            completionRate: taskList.length === 0 ? 0 : done / taskList.length * 100,
             bestDailyGoalStreak: 0,
-            priorityTasks: []
+            priorityTasks: [],
+            todayCompletedDailyGoals: doneDailyGoals,
+            todayCompletedDeadlineTasks: doneDeadlineTasks,
+            todayCompletedTasks: done,
+            todayCompletionRate: taskList.length === 0 ? 0 : done / taskList.length * 100
         };
     }
 
@@ -578,10 +662,11 @@
     }
 
     function setDefaultDeadline() {
-        if (!refs.deadlineTaskForm || !refs.deadlineTaskForm.elements.deadlineAt) {
+        const form = refs.taskCreateForm;
+        if (!form || !form.elements.deadlineAt) {
             return;
         }
-        const input = refs.deadlineTaskForm.elements.deadlineAt;
+        const input = form.elements.deadlineAt;
         if (!input.value) {
             const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
             const offset = tomorrow.getTimezoneOffset() * 60000;
@@ -629,7 +714,18 @@
         return Number.parseInt(value, 10);
     }
 
+    function numberOr(value, fallback) {
+        return Number.isFinite(Number(value)) ? Number(value) : fallback;
+    }
+
+    function numberOrZero(value) {
+        return numberOr(value, 0);
+    }
+
     function formatError(body) {
+        if (typeof body === "string") {
+            return body;
+        }
         if (body && Array.isArray(body.details) && body.details.length > 0) {
             return body.details.join(" / ");
         }
@@ -658,5 +754,14 @@
     function setMessage(text, isError) {
         refs.loadMessage.textContent = text || "";
         refs.loadMessage.className = isError ? "load-message error" : "load-message";
+    }
+
+    function setTaskModalMessage(text, isError) {
+        refs.taskModalMessage.textContent = text || "";
+        refs.taskModalMessage.className = isError ? "form-message error" : "form-message";
+    }
+
+    function clearTaskModalMessage() {
+        setTaskModalMessage("");
     }
 })();

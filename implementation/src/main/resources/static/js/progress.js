@@ -11,16 +11,20 @@
         date: document.querySelector("[data-progress-date]"),
         message: document.querySelector("[data-progress-message]"),
         completionRate: document.querySelector("[data-completion-rate]"),
-        waveRate: document.querySelector("[data-wave-rate]"),
-        waveVisual: document.querySelector("[data-wave-visual]"),
-        waveNote: document.querySelector("[data-wave-note]"),
-        doneTasks: document.querySelector("[data-done-tasks]"),
-        totalTasks: document.querySelector("[data-total-tasks]"),
-        incompleteTasks: document.querySelector("[data-incomplete-tasks]"),
+        weeklyDelta: document.querySelector("[data-weekly-delta]"),
+        miniRing: document.querySelector("[data-mini-ring]"),
         bestStreak: document.querySelector("[data-best-streak]"),
-        dailyGoalCount: document.querySelector("[data-daily-goal-count]"),
-        dailyStreakList: document.querySelector("[data-daily-streak-list]"),
-        priorityList: document.querySelector("[data-priority-list]")
+        totalFocusTime: document.querySelector("[data-total-focus-time]"),
+        completedGoals: document.querySelector("[data-completed-goals]"),
+        doneTasks: document.querySelector("[data-done-tasks]"),
+        completionDonut: document.querySelector("[data-completion-donut]"),
+        donutRate: document.querySelector("[data-donut-rate]"),
+        donutDone: document.querySelector("[data-donut-done]"),
+        donutIncomplete: document.querySelector("[data-donut-incomplete]"),
+        dateRange: document.querySelector("[data-date-range]"),
+        dailyLineChart: document.querySelector("[data-daily-line-chart]"),
+        priorityList: document.querySelector("[data-priority-list]"),
+        insight: document.querySelector("[data-progress-insight]")
     };
 
     refs.date.textContent = new Intl.DateTimeFormat("ko-KR", {
@@ -35,24 +39,22 @@
     async function loadProgress() {
         setMessage("진행도 데이터를 불러오는 중입니다.");
 
-        const [progressResult, tasksResult] = await Promise.all([
-            fetchJson("/api/progress"),
-            fetchJson("/api/tasks")
-        ]);
+        const progressResult = await fetchJson("/api/progress");
 
-        if ([progressResult, tasksResult].some(isUnauthorized)) {
+        if (isUnauthorized(progressResult)) {
             redirectToLogin();
             return;
         }
 
-        const tasks = tasksResult.ok ? asArray(tasksResult.data) : [];
-        const progress = progressResult.ok ? progressResult.data : fallbackProgress(tasks);
+        const progress = progressResult.ok ? progressResult.data : fallbackProgress();
 
         renderSummary(progress);
-        renderDailyGoalStreaks(tasks);
+        renderCompletionDonut(progress);
+        renderLineChart(asArray(progress.dailyCompletionRates));
         renderPriority(asArray(progress.priorityTasks));
+        renderInsight(progress);
 
-        setMessage(progressResult.ok && tasksResult.ok ? "" : "일부 진행도 데이터를 불러오지 못했습니다.", !progressResult.ok || !tasksResult.ok);
+        setMessage(progressResult.ok ? "" : "진행도 데이터를 불러오지 못했습니다.", !progressResult.ok);
     }
 
     async function fetchJson(url) {
@@ -72,55 +74,104 @@
     function renderSummary(progress) {
         const rate = clamp(Math.round(progress.completionRate || 0), 0, 100);
         refs.completionRate.textContent = rate + "%";
-        refs.waveRate.textContent = rate + "%";
-        refs.waveVisual.style.setProperty("--wave-level", Math.max(rate, 12) + "%");
-        refs.doneTasks.textContent = progress.doneTasks || 0;
-        refs.totalTasks.textContent = "전체 " + (progress.totalTasks || 0) + "개";
-        refs.incompleteTasks.textContent = progress.incompleteTasks || 0;
         refs.bestStreak.textContent = (progress.bestDailyGoalStreak || 0) + "일";
-        refs.waveNote.textContent = rate >= 80
-                ? "이번 달 진행도가 안정적으로 올라왔습니다."
-                : "완료 체크가 쌓이면 이번 달 파도가 더 높아집니다.";
+        refs.totalFocusTime.textContent = formatMinutes(progress.totalFocusMinutes || 0);
+        refs.completedGoals.textContent = (progress.completedGoalCount || progress.doneTasks || 0)
+                + " / " + (progress.totalTasks || 0);
+        refs.miniRing.style.setProperty("--rate", rate + "%");
+
+        const delta = Number(progress.weeklyCompletionRateDelta || 0);
+        refs.weeklyDelta.textContent = "지난 주 대비 " + signedPercent(delta);
+        refs.weeklyDelta.className = delta >= 0 ? "trend positive" : "trend negative";
+
+        const dailyRates = asArray(progress.dailyCompletionRates);
+        if (dailyRates.length > 0) {
+            refs.dateRange.textContent = dailyRates[0].label + " - " + dailyRates[dailyRates.length - 1].label;
+        }
     }
 
-    function renderDailyGoalStreaks(tasks) {
-        const dailyGoals = tasks.filter(function (task) {
-            return task.taskType === "DAILY_GOAL";
-        }).sort(compareDailyGoals);
+    function renderCompletionDonut(progress) {
+        const rate = clamp(Math.round(progress.completionRate || 0), 0, 100);
+        const done = progress.doneTasks || 0;
+        const incomplete = progress.incompleteTasks || 0;
 
-        refs.dailyGoalCount.textContent = dailyGoals.length;
-        refs.dailyStreakList.innerHTML = "";
+        refs.completionDonut.style.setProperty("--done", rate + "%");
+        refs.donutRate.textContent = rate + "%";
+        refs.doneTasks.textContent = done;
+        refs.donutDone.textContent = done + "개";
+        refs.donutIncomplete.textContent = incomplete + "개";
+    }
 
-        if (dailyGoals.length === 0) {
-            const empty = emptyState("아직 Daily Goal이 없습니다. ");
-            const link = document.createElement("a");
-            link.href = "/dashboard";
-            link.textContent = "대시보드에서 추가";
-            empty.appendChild(link);
-            refs.dailyStreakList.appendChild(empty);
+    function renderLineChart(dailyRates) {
+        if (dailyRates.length === 0) {
+            refs.dailyLineChart.innerHTML = "<p class=\"empty-state\">최근 7일 완료 기록이 없습니다.</p>";
             return;
         }
 
-        dailyGoals.forEach(function (goal) {
-            const item = document.createElement("article");
-            item.className = "streak-item";
-            item.innerHTML = "<div class=\"streak-score\">"
-                    + "<strong>" + (goal.currentStreak || 0) + "</strong>"
-                    + "<span>days</span>"
-                    + "</div>"
-                    + "<div>"
-                    + "<strong>" + escapeHtml(goal.title || "제목 없음") + "</strong>"
-                    + "<small>" + escapeHtml(goal.description || "하루 목표 " + (goal.targetCountPerDay || 1) + "회") + "</small>"
-                    + "<div class=\"meta-row\">"
-                    + "<span>하루 " + (goal.targetCountPerDay || 1) + "회</span>"
-                    + "<span>" + statusLabel(goal.status) + "</span>"
-                    + "<span>마지막 " + formatDate(goal.lastCompletedDate) + "</span>"
-                    + "<span>" + (goal.estimatedMinutes || 0) + "분</span>"
-                    + "<span>중요도 " + (goal.importance || 0) + "</span>"
-                    + "</div>"
-                    + "</div>";
-            refs.dailyStreakList.appendChild(item);
+        const width = 660;
+        const height = 280;
+        const padding = { top: 22, right: 26, bottom: 46, left: 44 };
+        const chartWidth = width - padding.left - padding.right;
+        const chartHeight = height - padding.top - padding.bottom;
+        const points = dailyRates.map(function (day, index) {
+            const x = padding.left + (chartWidth / Math.max(dailyRates.length - 1, 1)) * index;
+            const y = padding.top + chartHeight - (clamp(day.completionRate || 0, 0, 100) / 100) * chartHeight;
+            return {
+                x: x,
+                y: y,
+                rate: Math.round(day.completionRate || 0),
+                label: day.label,
+                completedCount: day.completedCount || 0
+            };
         });
+        const path = points.map(function (point, index) {
+            return (index === 0 ? "M " : "L ") + point.x.toFixed(1) + " " + point.y.toFixed(1);
+        }).join(" ");
+        const areaPath = path + " L " + points[points.length - 1].x.toFixed(1) + " " + (height - padding.bottom)
+                + " L " + points[0].x.toFixed(1) + " " + (height - padding.bottom) + " Z";
+
+        refs.dailyLineChart.innerHTML = "<svg viewBox=\"0 0 " + width + " " + height
+                + "\" role=\"img\" aria-label=\"최근 7일 일별 완료율 선 그래프\">"
+                + "<defs>"
+                + "<linearGradient id=\"dailyLineArea\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\">"
+                + "<stop offset=\"0%\" stop-color=\"#26b97a\" stop-opacity=\"0.22\"/>"
+                + "<stop offset=\"100%\" stop-color=\"#26b97a\" stop-opacity=\"0.02\"/>"
+                + "</linearGradient>"
+                + "</defs>"
+                + gridMarkup(width, padding, chartHeight)
+                + "<path class=\"chart-area\" d=\"" + areaPath + "\"></path>"
+                + "<path class=\"chart-line\" d=\"" + path + "\"></path>"
+                + pointMarkup(points)
+                + xAxisMarkup(points, height, padding)
+                + "</svg>";
+    }
+
+    function gridMarkup(width, padding, chartHeight) {
+        return [0, 50, 100].map(function (value) {
+            const y = padding.top + chartHeight - (value / 100) * chartHeight;
+            return "<g class=\"chart-grid\">"
+                    + "<line x1=\"" + padding.left + "\" y1=\"" + y + "\" x2=\"" + (width - padding.right)
+                    + "\" y2=\"" + y + "\"></line>"
+                    + "<text x=\"12\" y=\"" + (y + 4) + "\">" + value + "</text>"
+                    + "</g>";
+        }).join("");
+    }
+
+    function pointMarkup(points) {
+        return points.map(function (point) {
+            return "<g class=\"chart-point\">"
+                    + "<circle cx=\"" + point.x.toFixed(1) + "\" cy=\"" + point.y.toFixed(1) + "\" r=\"5\"></circle>"
+                    + "<text x=\"" + point.x.toFixed(1) + "\" y=\"" + (point.y - 12).toFixed(1) + "\">"
+                    + point.rate + "%</text>"
+                    + "</g>";
+        }).join("");
+    }
+
+    function xAxisMarkup(points, height, padding) {
+        return points.map(function (point) {
+            return "<text class=\"x-label\" x=\"" + point.x.toFixed(1) + "\" y=\"" + (height - padding.bottom + 28)
+                    + "\">" + escapeHtml(point.label) + "</text>";
+        }).join("");
     }
 
     function renderPriority(tasks) {
@@ -131,52 +182,46 @@
             return;
         }
 
-        tasks.slice(0, 5).forEach(function (task) {
+        tasks.slice(0, 5).forEach(function (task, index) {
             const item = document.createElement("article");
-            item.className = "task-item";
-            item.innerHTML = "<strong>" + escapeHtml(task.title || "제목 없음") + "</strong>"
-                    + "<small>" + escapeHtml(task.description || taskTypeLabel(task.taskType)) + "</small>"
-                    + "<div class=\"meta-row\">"
-                    + "<span>" + taskTypeLabel(task.taskType) + "</span>"
-                    + "<span>" + statusLabel(task.status) + "</span>"
-                    + "<span>중요도 " + (task.importance || 0) + "</span>"
-                    + taskDeadlineMeta(task)
-                    + "</div>";
+            item.className = "priority-row";
+            item.innerHTML = "<span class=\"priority-rank\">" + (index + 1) + "</span>"
+                    + "<div class=\"priority-main\">"
+                    + "<strong>" + escapeHtml(task.title || "제목 없음") + "</strong>"
+                    + "<small>" + escapeHtml(taskDeadlineMeta(task)) + "</small>"
+                    + "</div>"
+                    + "<span class=\"priority-badge " + priorityTone(task.importance || 0) + "\">"
+                    + priorityLabel(task.importance || 0) + "</span>";
             refs.priorityList.appendChild(item);
         });
     }
 
-    function compareDailyGoals(a, b) {
-        const streakDiff = (b.currentStreak || 0) - (a.currentStreak || 0);
-        if (streakDiff !== 0) {
-            return streakDiff;
+    function renderInsight(progress) {
+        const delta = Number(progress.weeklyCompletionRateDelta || 0);
+        if (delta > 0) {
+            refs.insight.textContent = "이번 주 수행율이 지난주보다 " + signedPercent(delta)
+                    + " 좋아졌습니다. 좋은 흐름을 계속 타보세요.";
+            return;
         }
-
-        const dateDiff = dateValue(b.lastCompletedDate) - dateValue(a.lastCompletedDate);
-        if (dateDiff !== 0) {
-            return dateDiff;
+        if (delta < 0) {
+            refs.insight.textContent = "이번 주 수행율이 지난주보다 " + signedPercent(delta)
+                    + " 낮습니다. 작은 목표부터 다시 올려보세요.";
+            return;
         }
-
-        return (b.importance || 0) - (a.importance || 0);
+        refs.insight.textContent = "이번 주 수행율이 지난주와 비슷합니다. 오늘 완료 체크로 흐름을 바꿀 수 있습니다.";
     }
 
-    function taskDeadlineMeta(task) {
-        if (!task.deadlineAt) {
-            return "";
-        }
-        return "<span>마감 " + formatDateTime(task.deadlineAt) + "</span>";
-    }
-
-    function fallbackProgress(tasks) {
-        const done = asArray(tasks).filter(function (task) { return task.status === "DONE"; }).length;
+    function fallbackProgress() {
         return {
-            totalTasks: asArray(tasks).length,
-            doneTasks: done,
-            incompleteTasks: asArray(tasks).length - done,
-            completionRate: asArray(tasks).length === 0 ? 0 : done / asArray(tasks).length * 100,
-            bestDailyGoalStreak: asArray(tasks)
-                    .filter(function (task) { return task.taskType === "DAILY_GOAL"; })
-                    .reduce(function (best, task) { return Math.max(best, task.currentStreak || 0); }, 0),
+            totalTasks: 0,
+            doneTasks: 0,
+            incompleteTasks: 0,
+            completionRate: 0,
+            bestDailyGoalStreak: 0,
+            totalFocusMinutes: 0,
+            completedGoalCount: 0,
+            weeklyCompletionRateDelta: 0,
+            dailyCompletionRates: [],
             priorityTasks: []
         };
     }
@@ -215,43 +260,48 @@
         return node;
     }
 
-    function dateValue(value) {
-        return value ? new Date(value).getTime() : 0;
-    }
-
-    function formatDate(value) {
-        if (!value) {
-            return "기록 없음";
+    function taskDeadlineMeta(task) {
+        if (!task.deadlineAt) {
+            return task.taskType === "DAILY_GOAL" ? "Daily Goal" : "마감 미설정";
         }
-        return new Intl.DateTimeFormat("ko-KR", {
-            month: "short",
-            day: "numeric"
-        }).format(new Date(value));
+        const days = Math.ceil((new Date(task.deadlineAt).getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+        return days >= 0 ? "D-" + days : "기한 초과";
     }
 
-    function formatDateTime(value) {
-        if (!value) {
-            return "미설정";
+    function priorityTone(importance) {
+        if (importance >= 5) {
+            return "high";
         }
-        return new Intl.DateTimeFormat("ko-KR", {
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit"
-        }).format(new Date(value));
+        if (importance >= 3) {
+            return "medium";
+        }
+        return "low";
     }
 
-    function taskTypeLabel(value) {
-        return value === "DAILY_GOAL" ? "Daily Goal" : "Deadline Task";
+    function priorityLabel(importance) {
+        if (importance >= 5) {
+            return "높음";
+        }
+        if (importance >= 3) {
+            return "보통";
+        }
+        return "낮음";
     }
 
-    function statusLabel(value) {
-        const labels = {
-            TODO: "대기",
-            IN_PROGRESS: "진행 중",
-            DONE: "완료"
-        };
-        return labels[value] || value || "상태 없음";
+    function signedPercent(value) {
+        const rounded = Math.round(value);
+        return (rounded > 0 ? "+" : "") + rounded + "%";
+    }
+
+    function formatMinutes(minutes) {
+        const safeMinutes = Math.max(Number(minutes) || 0, 0);
+        const hours = Math.floor(safeMinutes / 60);
+        const rest = safeMinutes % 60;
+
+        if (hours === 0) {
+            return rest + "분";
+        }
+        return hours + "h " + rest + "m";
     }
 
     function escapeHtml(value) {

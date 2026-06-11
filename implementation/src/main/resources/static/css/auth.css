@@ -44,8 +44,8 @@ a:hover {
 
 .auth-shell {
     display: grid;
-    grid-template-columns: minmax(360px, 0.88fr) minmax(340px, 440px);
-    width: min(1160px, calc(100% - 40px));
+    grid-template-columns: minmax(360px, 540px) minmax(340px, 440px);
+    width: min(980px, calc(100% - 40px));
     min-height: 100vh;
     margin: 0 auto;
     padding: 44px 0;
@@ -54,12 +54,13 @@ a:hover {
 
 .surf-visual {
     position: relative;
-    min-height: 620px;
+    height: min(760px, calc(100vh - 88px));
+    min-height: 600px;
     overflow: hidden;
     border-radius: 8px 0 0 8px;
     background:
             linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(5, 58, 92, 0.08)),
-            url("/img/background-ui.png") center / cover no-repeat;
+            #69d0f3 url("/img/background-ui.png") center / contain no-repeat;
     box-shadow: var(--shadow);
 }
 
@@ -99,15 +100,17 @@ a:hover {
 }
 
 .auth-panel {
-    min-height: 620px;
-    padding: 64px 48px;
+    height: min(760px, calc(100vh - 88px));
+    min-height: 600px;
+    overflow-y: auto;
+    padding: clamp(32px, 4.5vh, 52px) 48px;
     border-radius: 0 8px 8px 0;
     background: rgba(255, 255, 255, 0.96);
     box-shadow: var(--shadow);
 }
 
 .auth-copy {
-    margin: 68px 0 30px;
+    margin: clamp(28px, 5vh, 48px) 0 24px;
 }
 
 .eyebrow {
@@ -220,13 +223,17 @@ a:hover {
     }
 
     .surf-visual {
+        height: auto;
         min-height: 380px;
         border-radius: 8px 8px 0 0;
+        background-size: cover;
         background-position: center 34%;
     }
 
     .auth-panel {
+        height: auto;
         min-height: auto;
+        overflow-y: visible;
         border-radius: 0 0 8px 8px;
         padding: 40px 28px;
     }

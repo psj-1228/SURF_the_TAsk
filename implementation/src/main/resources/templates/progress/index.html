@@ -16,7 +16,11 @@
         </a>
         <nav class="nav-list">
             <a href="/dashboard">대시보드</a>
-            <a class="active" href="/progress">Progress</a>
+            <a href="/schedule">개인 시간표</a>
+            <a href="#overview">개요</a>
+            <a href="/focus">집중 모드</a>
+            <a href="#daily-rate">일별 완료율</a>
+            <a class="active" href="/progress">진행 현황</a>
         </nav>
     </aside>
 
@@ -24,73 +28,111 @@
         <header class="progress-topbar">
             <div>
                 <p class="eyebrow">Progress</p>
-                <h1>Daily Goal streak</h1>
+                <h1>진행 현황</h1>
                 <p data-progress-date>진행도 데이터를 불러오는 중입니다.</p>
             </div>
-            <a class="ghost-link" href="/dashboard">대시보드</a>
+            <div class="topbar-actions">
+                <div class="period-tabs" aria-label="진행 현황 기간">
+                    <button class="active" type="button">개요</button>
+                    <button type="button">주간</button>
+                    <button type="button">월간</button>
+                    <button type="button">연간</button>
+                </div>
+                <a class="ghost-link" href="/dashboard">대시보드</a>
+            </div>
         </header>
 
-        <section class="summary-grid" data-progress-summary aria-label="진행도 요약">
-            <article class="summary-item">
-                <span>전체 완료율</span>
-                <strong data-completion-rate>0%</strong>
-                <small>전체 Task 기준</small>
+        <section class="metric-grid" id="overview" aria-label="진행 현황 요약">
+            <article class="metric-card rate-card">
+                <div>
+                    <span>전체 완료율</span>
+                    <strong data-completion-rate>0%</strong>
+                    <small data-weekly-delta>지난 주 대비 0%</small>
+                </div>
+                <div class="mini-ring" data-mini-ring style="--rate: 0%;"></div>
             </article>
-            <article class="summary-item">
-                <span>완료 Task</span>
-                <strong data-done-tasks>0</strong>
-                <small data-total-tasks>전체 0개</small>
+            <article class="metric-card">
+                <div>
+                    <span>연속 기록</span>
+                    <strong data-best-streak>0일</strong>
+                    <small>Daily Goal 최고 기록</small>
+                </div>
+                <span class="metric-icon flame" aria-hidden="true">◆</span>
             </article>
-            <article class="summary-item">
-                <span>미완료 Task</span>
-                <strong data-incomplete-tasks>0</strong>
-                <small>남은 항해</small>
+            <article class="metric-card">
+                <div>
+                    <span>총 집중 시간</span>
+                    <strong data-total-focus-time>0분</strong>
+                    <small>완료된 집중 세션 기준</small>
+                </div>
+                <span class="metric-icon clock" aria-hidden="true">●</span>
             </article>
-            <article class="summary-item">
-                <span>최고 Streak</span>
-                <strong data-best-streak>0일</strong>
-                <small>Daily Goal 기준</small>
+            <article class="metric-card">
+                <div>
+                    <span>완료한 목표</span>
+                    <strong data-completed-goals>0 / 0</strong>
+                    <small>전체 Task 기준</small>
+                </div>
+                <span class="metric-icon check" aria-hidden="true">✓</span>
             </article>
         </section>
 
-        <section class="progress-grid">
-            <article class="wave-panel">
+        <section class="analytics-grid">
+            <article class="panel completion-panel" aria-label="완료 현황">
                 <div class="panel-heading">
                     <div>
-                        <p class="eyebrow">Monthly wave</p>
-                        <h2>이번 달 진행도</h2>
+                        <p class="eyebrow">Completion</p>
+                        <h2>완료 현황</h2>
                     </div>
-                    <strong data-wave-rate>0%</strong>
+                    <span class="count-badge" data-done-tasks>0</span>
                 </div>
-                <div class="wave-visual" data-wave-visual style="--wave-level: 12%;">
-                    <span class="wave-fill"></span>
-                    <span class="wave-crest crest-one"></span>
-                    <span class="wave-crest crest-two"></span>
-                    <span class="wave-crest crest-three"></span>
+                <div class="completion-body">
+                    <div class="donut-chart" data-completion-donut style="--done: 0%;">
+                        <span data-donut-rate>0%</span>
+                    </div>
+                    <div class="donut-legend">
+                        <div>
+                            <span class="legend-dot done"></span>
+                            <strong>완료</strong>
+                            <small data-donut-done>0개</small>
+                        </div>
+                        <div>
+                            <span class="legend-dot remaining"></span>
+                            <strong>미완료</strong>
+                            <small data-donut-incomplete>0개</small>
+                        </div>
+                    </div>
                 </div>
-                <p class="panel-note" data-wave-note>완료율이 올라갈수록 파도가 높아집니다.</p>
             </article>
 
-            <article class="panel">
+            <article class="panel line-panel" id="daily-rate" aria-label="일별 완료율">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Daily rate</p>
+                        <h2>일별 완료율</h2>
+                    </div>
+                    <span class="date-range" data-date-range>최근 7일</span>
+                </div>
+                <div class="line-chart" data-daily-line-chart></div>
+            </article>
+
+            <article class="panel priority-panel" aria-label="업무 우선순위 Top 5">
                 <div class="panel-heading">
                     <div>
                         <p class="eyebrow">Priority</p>
-                        <h2>우선순위 Task</h2>
+                        <h2>업무 우선순위 Top 5</h2>
                     </div>
                 </div>
-                <div class="task-list" data-priority-list></div>
+                <div class="priority-list" data-priority-list></div>
             </article>
         </section>
 
-        <section class="panel streak-panel" aria-label="Daily Goal streak">
-            <div class="panel-heading">
-                <div>
-                    <p class="eyebrow">Daily Goal</p>
-                    <h2>Goal별 streak</h2>
-                </div>
-                <span class="count-badge" data-daily-goal-count>0</span>
+        <section class="insight-banner" aria-label="진행 현황 인사이트">
+            <div>
+                <strong>인사이트</strong>
+                <span data-progress-insight>이번 주 진행률을 분석하는 중입니다.</span>
             </div>
-            <div class="streak-list" data-daily-streak-list></div>
+            <span class="insight-mark" aria-hidden="true"></span>
         </section>
 
         <p class="load-message" data-progress-message role="status" aria-live="polite"></p>
