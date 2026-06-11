@@ -51,3 +51,56 @@
 - Class Diagram의 핵심 도메인 모델은 유지한다.
 - 화면 구현에 필요한 추가 정보는 Entity 저장 필드가 아니라 DTO와 조회 쿼리에서 계산한다.
 - 개발 편의용 `/dev-login`은 `local` profile에만 열어 실제 운영 흐름과 분리한다.
+
+## Reminder Notification Implementation Deviations
+
+### Reason
+
+The public Scheduler, Controller, and Service method surface from `images/Implementation_Class_Diagram.puml` was kept. Reminder scheduler email and in-site notification work still required enum values, SMTP configuration, constructor dependencies, private helpers, a widened `Reminder` column length, and a dashboard hook.
+
+### Public Method Policy
+
+No new public Controller, Scheduler, or Service methods were added. Existing methods were reused:
+
+- `ReminderScheduler.runAvailabilityReminderCheck()`: checks available time and creates in-site reminders only.
+- `ReminderScheduler.runDeadlineReminderCheck()`: checks Daily Goal day-end email reminders and Deadline Task offset email reminders.
+- `ReminderService.checkAvailabilityReminder(User, LocalDateTime)`: creates `IN_SITE` reminders using the existing availability entry point.
+- `ReminderService.checkDeadlineReminder(User, LocalDateTime)`: creates Daily Goal and Deadline Task email reminders using the existing deadline entry point.
+- `ReminderService.sendReminder(Reminder)`: routes `EMAIL` through SMTP and `IN_SITE` through local status/history updates.
+
+### Enum Values Added
+
+- `DAILY_GOAL_DAY_END_ONE_HOUR`
+- `DAILY_GOAL_DAY_END_THIRTY_MINUTES`
+- `DEADLINE_ONE_HOUR`
+- `DEADLINE_THIRTY_MINUTES`
+
+### Implementation Dependencies Added To ReminderService
+
+- `DailyGoalRepository`
+- `ObjectProvider<JavaMailSender>`
+- `app.notification.email.enabled`
+- `app.notification.email.from`
+
+### Entity Mapping Adjustment
+
+- `Reminder.reminderType` column length was widened from 30 to 40 because the longest new enum value is longer than 30.
+
+### Private Helper Note
+
+Private helpers added inside `ReminderService`:
+
+- `unfinishedWorkForAvailability`
+- `createDailyGoalEmailReminders`
+- `createDeadlineTaskEmailReminders`
+- `createEmailReminderIfDue`
+- `sendEmailReminder`
+- `failReminder`
+- `isInTargetWindow`
+- `hasTaskReminderAtOrAfter`
+- `emailSubject`
+- `addIfNotNull`
+
+### Frontend Hook Added
+
+- `dashboard/index.html` adds `data-reminder-toast-region` for the accessible in-site reminder toast region.
