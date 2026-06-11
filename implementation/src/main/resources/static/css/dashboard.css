@@ -888,6 +888,80 @@ button:disabled {
     color: #b7322c;
 }
 
+.reminder-toast-region {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 20;
+    display: grid;
+    gap: 10px;
+    width: min(360px, calc(100vw - 32px));
+    pointer-events: none;
+}
+
+.reminder-toast {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: start;
+    padding: 12px 12px 12px 14px;
+    border: 1px solid rgba(16, 168, 160, 0.26);
+    border-left: 4px solid var(--teal);
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 16px 42px rgba(14, 40, 68, 0.18);
+    pointer-events: auto;
+}
+
+.reminder-toast-content {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.reminder-toast strong,
+.reminder-toast span,
+.reminder-toast small {
+    display: block;
+}
+
+.reminder-toast strong {
+    color: var(--navy);
+    font-size: 14px;
+}
+
+.reminder-toast span {
+    color: var(--ink);
+    font-size: 13px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.reminder-toast small {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.reminder-toast-dismiss {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--muted);
+    cursor: pointer;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.reminder-toast-dismiss:hover {
+    color: var(--navy);
+    border-color: rgba(23, 107, 210, 0.34);
+    background: rgba(23, 107, 210, 0.08);
+}
+
 @media (max-width: 1100px) {
     .app-shell {
         grid-template-columns: 1fr;
@@ -936,6 +1010,12 @@ button:disabled {
 @media (max-width: 520px) {
     .dashboard {
         padding: 22px 14px 30px;
+    }
+
+    .reminder-toast-region {
+        right: 12px;
+        bottom: 12px;
+        width: calc(100vw - 24px);
     }
 
     .side-nav {
