@@ -323,7 +323,7 @@ public class ReminderService {
     ) {
         if (!preference.canSend(AlertChannel.EMAIL, type)
                 || !isInTargetWindow(now, targetTime)
-                || hasTaskReminderAtOrAfter(task, type, targetTime)) {
+                || hasTaskReminderAt(task, type, targetTime)) {
             return null;
         }
 
@@ -374,12 +374,12 @@ public class ReminderService {
         return !now.isBefore(targetTime) && now.isBefore(targetTime.plusMinutes(1));
     }
 
-    private boolean hasTaskReminderAtOrAfter(Task task, ReminderType type, LocalDateTime targetTime) {
-        return !reminderRepository.findByTaskTaskIdAndReminderTypeAndScheduledAtAfter(
+    private boolean hasTaskReminderAt(Task task, ReminderType type, LocalDateTime targetTime) {
+        return reminderRepository.findByTaskTaskIdAndReminderTypeAndScheduledAtAfter(
                 task.getTaskId(),
                 type,
                 targetTime.minusSeconds(1)
-        ).isEmpty();
+        ).stream().anyMatch(reminder -> targetTime.equals(reminder.getScheduledAt()));
     }
 
     private String emailSubject(Reminder reminder) {

@@ -254,6 +254,46 @@ class ReminderServiceTest {
     }
 
     @Test
+    void deadlineTaskEmailIgnoresLaterSameTypeReminderWhenCurrentTargetHasNotBeenSent() {
+        LocalDateTime now = LocalDateTime.of(2026, 6, 11, 13, 0);
+        DeadlineTask task = new DeadlineTask(
+                user,
+                "Submit report",
+                "",
+                60,
+                5,
+                now.plusHours(1),
+                24
+        );
+        Reminder laterReminder = new Reminder(
+                user,
+                task,
+                null,
+                ReminderType.DEADLINE_ONE_HOUR,
+                AlertChannel.EMAIL,
+                "Deadline is due in 1 hour: Submit report",
+                now.plusDays(1)
+        );
+
+        when(mailSenderProvider.getIfAvailable()).thenReturn(mailSender);
+        when(dailyGoalRepository.findByUserUserId(nullable(Long.class))).thenReturn(List.of());
+        when(deadlineTaskRepository.findByUserUserIdAndStatusNot(nullable(Long.class), eq(TaskStatus.DONE)))
+                .thenReturn(List.of(task));
+        when(reminderRepository.findByTaskTaskIdAndReminderTypeAndScheduledAtAfter(
+                nullable(Long.class),
+                eq(ReminderType.DEADLINE_ONE_HOUR),
+                any(LocalDateTime.class)
+        )).thenReturn(List.of(laterReminder));
+
+        List<Reminder> reminders = reminderService.checkDeadlineReminder(user, now);
+
+        assertThat(reminders).hasSize(1);
+        assertThat(reminders.get(0).getReminderType()).isEqualTo(ReminderType.DEADLINE_ONE_HOUR);
+        assertThat(reminders.get(0).getScheduledAt()).isEqualTo(now);
+        verify(mailSender).send(any(SimpleMailMessage.class));
+    }
+
+    @Test
     void emailFailureMarksReminderFailedAndRecordsHistory() {
         LocalDateTime now = LocalDateTime.of(2026, 6, 11, 22, 59);
         DailyGoal dailyGoal = new DailyGoal(user, "Stretch", "", 10, 3, 1);
