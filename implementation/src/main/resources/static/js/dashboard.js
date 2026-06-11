@@ -694,10 +694,10 @@
             return storedId !== normalizedId;
         });
         displayedReminderIds.push(normalizedId);
-        displayedReminderIds = displayedReminderIds.slice(-50);
+        const persistedReminderIds = displayedReminderIds.slice(-50);
 
         try {
-            localStorage.setItem(displayedReminderStorageKey, JSON.stringify(displayedReminderIds));
+            localStorage.setItem(displayedReminderStorageKey, JSON.stringify(persistedReminderIds));
         } catch (error) {
             // Ignore storage errors; the in-memory list still prevents duplicate toasts this session.
         }
