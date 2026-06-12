@@ -850,7 +850,11 @@
             AVAILABILITY_BASED: "가능 시간",
             DEADLINE_WARNING: "마감 경고",
             OVERDUE_ALERT: "기한 초과",
-            DELAYED_IN_SITE: "Focus 확인"
+            DELAYED_IN_SITE: "Focus 확인",
+            DAILY_GOAL_DAY_END_ONE_HOUR: "Daily Goal 마감 1시간 전",
+            DAILY_GOAL_DAY_END_THIRTY_MINUTES: "Daily Goal 마감 30분 전",
+            DEADLINE_ONE_HOUR: "Task 마감 1시간 전",
+            DEADLINE_THIRTY_MINUTES: "Task 마감 30분 전"
         };
         return labels[value] || "알림";
     }
