@@ -1,0 +1,45 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: surf-the-task-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-surf_root_password}
+      MYSQL_DATABASE: surf_the_task
+      MYSQL_USER: ${DB_USERNAME:-surf_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-surf_password}
+      TZ: Asia/Seoul
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: surf-the-task:local
+    container_name: surf-the-task-app
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      DB_URL: "jdbc:mysql://mysql:3306/surf_the_task?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8"
+      DB_USERNAME: ${DB_USERNAME:-surf_user}
+      DB_PASSWORD: ${DB_PASSWORD:-surf_password}
+      DDL_AUTO: ${DDL_AUTO:-update}
+      JWT_SECRET: ${JWT_SECRET:-local-development-secret-change-before-production-0123456789}
+      JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES:-1440}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+
+volumes:
+  mysql-data:
