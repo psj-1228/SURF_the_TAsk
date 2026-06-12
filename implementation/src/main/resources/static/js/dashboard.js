@@ -4,6 +4,7 @@
     let lastFocusedElement = null;
     const displayedReminderStorageKey = "surfDisplayedReminderIds";
     const reminderPollIntervalMs = 30000;
+    const initialReminderReplayWindowMs = 30 * 60 * 1000;
     let displayedReminderIds = readDisplayedReminderIds();
     let hasLoadedInitialReminders = false;
     let reminderPollTimer = null;
@@ -626,7 +627,18 @@
 
         if (!hasLoadedInitialReminders) {
             inSiteSentReminders.forEach(function (reminder) {
-                rememberDisplayedReminder(reminder.reminderId);
+                const reminderId = reminder.reminderId;
+
+                if (reminderId === null || reminderId === undefined) {
+                    return;
+                }
+
+                if (!displayedReminderIds.includes(String(reminderId))
+                        && isRecentReminder(reminder, initialReminderReplayWindowMs)) {
+                    showReminderToast(reminder);
+                }
+
+                rememberDisplayedReminder(reminderId);
             });
             hasLoadedInitialReminders = true;
             return;
@@ -719,6 +731,12 @@
         } catch (error) {
             return [];
         }
+    }
+
+    function isRecentReminder(reminder, windowMs) {
+        const timestamp = dateValue(reminder.sentAt || reminder.scheduledAt);
+        const ageMs = Date.now() - timestamp;
+        return Number.isFinite(timestamp) && ageMs >= 0 && ageMs <= windowMs;
     }
 
     function fallbackProgress(tasks) {

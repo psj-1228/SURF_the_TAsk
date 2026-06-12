@@ -86,6 +86,16 @@ No new public Controller, Scheduler, or Service methods were added. Existing met
 
 - `Reminder.reminderType` column length was widened from 30 to 40 because the longest new enum value is longer than 30.
 
+### MySQL Upgrade Script Added
+
+- `implementation/src/main/resources/db/mysql/03-update-reminder-notification-types.sql` updates existing MySQL `reminders.reminder_type` enum values for deployments running with `ddl-auto=validate`.
+- `implementation/scripts/setup-mysql.ps1` now runs all numbered SQL scripts in name order so new local schemas and upgraded schemas stay aligned.
+
+### Timing Safeguards
+
+- Email reminder target checks allow a 5-minute catch-up window after the exact target time to tolerate scheduler drift or brief application downtime.
+- Dashboard in-site reminder toasts replay unseen `IN_SITE`/`SENT` reminders from the last 30 minutes on the initial load, then remember displayed reminder ids in local storage.
+
 ### Private Helper Note
 
 Private helpers added inside `ReminderService`:

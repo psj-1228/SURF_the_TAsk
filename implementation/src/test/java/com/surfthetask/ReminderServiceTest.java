@@ -254,6 +254,38 @@ class ReminderServiceTest {
     }
 
     @Test
+    void deadlineTaskEmailStillSendsWhenSchedulerRunsShortlyAfterTargetTime() {
+        LocalDateTime targetTime = LocalDateTime.of(2026, 6, 11, 13, 0);
+        LocalDateTime now = targetTime.plusMinutes(2);
+        DeadlineTask task = new DeadlineTask(
+                user,
+                "Submit report",
+                "",
+                60,
+                5,
+                targetTime.plusHours(1),
+                24
+        );
+
+        when(mailSenderProvider.getIfAvailable()).thenReturn(mailSender);
+        when(dailyGoalRepository.findByUserUserId(nullable(Long.class))).thenReturn(List.of());
+        when(deadlineTaskRepository.findByUserUserIdAndStatusNot(nullable(Long.class), eq(TaskStatus.DONE)))
+                .thenReturn(List.of(task));
+        when(reminderRepository.findByTaskTaskIdAndReminderTypeAndScheduledAtAfter(
+                nullable(Long.class),
+                eq(ReminderType.DEADLINE_ONE_HOUR),
+                any(LocalDateTime.class)
+        )).thenReturn(List.of());
+
+        List<Reminder> reminders = reminderService.checkDeadlineReminder(user, now);
+
+        assertThat(reminders).hasSize(1);
+        assertThat(reminders.get(0).getReminderType()).isEqualTo(ReminderType.DEADLINE_ONE_HOUR);
+        assertThat(reminders.get(0).getScheduledAt()).isEqualTo(targetTime);
+        verify(mailSender).send(any(SimpleMailMessage.class));
+    }
+
+    @Test
     void deadlineTaskEmailIgnoresLaterSameTypeReminderWhenCurrentTargetHasNotBeenSent() {
         LocalDateTime now = LocalDateTime.of(2026, 6, 11, 13, 0);
         DeadlineTask task = new DeadlineTask(

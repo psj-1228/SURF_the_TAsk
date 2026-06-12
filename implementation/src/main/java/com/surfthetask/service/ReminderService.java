@@ -39,6 +39,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class ReminderService {
 
+    private static final long EMAIL_TARGET_GRACE_MINUTES = 5;
+
     private final UserRepository userRepository;
     private final TaskRepository taskRepository;
     private final DeadlineTaskRepository deadlineTaskRepository;
@@ -371,7 +373,7 @@ public class ReminderService {
     }
 
     private boolean isInTargetWindow(LocalDateTime now, LocalDateTime targetTime) {
-        return !now.isBefore(targetTime) && now.isBefore(targetTime.plusMinutes(1));
+        return !now.isBefore(targetTime) && !now.isAfter(targetTime.plusMinutes(EMAIL_TARGET_GRACE_MINUTES));
     }
 
     private boolean hasTaskReminderAt(Task task, ReminderType type, LocalDateTime targetTime) {
