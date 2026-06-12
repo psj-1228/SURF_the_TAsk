@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SURF the TAsk | 마감 업무</title>
+    <link rel="stylesheet" href="/css/modern.css">
+    <script defer src="/js/task-archive.js"></script>
+</head>
+<body>
+<div class="modern-shell task-archive-shell" data-task-archive-page="deadline">
+    <aside class="side-nav modern-side-nav" aria-label="주요 메뉴">
+        <a class="side-brand" href="/dashboard" aria-label="SURF the TAsk 대시보드">
+            <span>SURF</span>
+            <strong>the TAsk</strong>
+        </a>
+
+        <nav class="nav-list">
+            <a href="/dashboard">대시보드</a>
+            <a href="/schedule">개인 시간표</a>
+            <a href="/daily-goals">매일 목표</a>
+            <a class="active" href="/tasks">마감 업무</a>
+            <a href="/focus">집중 모드</a>
+            <a href="/progress">진행 현황</a>
+            <a href="/reminders">알림</a>
+        </nav>
+    </aside>
+
+    <main class="modern-main task-archive-main">
+        <header class="modern-topbar">
+            <div>
+                <p class="eyebrow">Deadline task archive</p>
+                <h1>마감 업무</h1>
+                <p data-task-archive-date>마감이 있는 업무 전체 흐름을 불러오는 중입니다.</p>
+            </div>
+            <div class="topbar-actions">
+                <a class="primary-link warning" href="/dashboard#deadline-tasks">업무 추가</a>
+                <button class="ghost-button" type="button" data-logout>로그아웃</button>
+            </div>
+        </header>
+
+        <section class="modern-summary-grid" aria-label="마감 업무 요약">
+            <article class="summary-item">
+                <span>전체 업무</span>
+                <strong data-task-archive-total>0</strong>
+                <small>완료 포함</small>
+            </article>
+            <article class="summary-item">
+                <span>진행 중</span>
+                <strong data-task-archive-active>0</strong>
+                <small>아직 닫히지 않은 업무</small>
+            </article>
+            <article class="summary-item">
+                <span>완료됨</span>
+                <strong data-task-archive-done>0</strong>
+                <small>완료 처리된 업무</small>
+            </article>
+        </section>
+
+        <section class="panel task-archive-panel">
+            <div class="panel-heading">
+                <div>
+                    <p class="eyebrow">All deadline tasks</p>
+                    <h2>전체 마감 업무</h2>
+                </div>
+                <span class="count-badge warning" data-task-archive-count>0</span>
+            </div>
+            <div class="task-archive-list" data-task-archive-list></div>
+        </section>
+
+        <p class="load-message" data-task-archive-message role="status" aria-live="polite"></p>
+    </main>
+</div>
+</body>
+</html>

@@ -2,6 +2,7 @@
     const storageKey = "surfUser";
     const user = readStoredUser();
     let lastFocusedElement = null;
+    let pendingDeleteTaskId = null;
     const displayedReminderStorageKey = "surfDisplayedReminderIds";
     const reminderPollIntervalMs = 30000;
     const initialReminderReplayWindowMs = 30 * 60 * 1000;
@@ -45,7 +46,11 @@
         dailyList: document.querySelector("[data-daily-list]"),
         deadlineList: document.querySelector("[data-deadline-list]"),
         availabilityList: document.querySelector("[data-availability-list]"),
-        reminderList: document.querySelector("[data-reminder-list]")
+        reminderList: document.querySelector("[data-reminder-list]"),
+        confirmDeleteModal: document.querySelector("[data-confirm-delete-modal]"),
+        deleteConfirmTitle: document.querySelector("[data-delete-confirm-title]"),
+        deleteConfirmMessage: document.querySelector("[data-delete-confirm-message]"),
+        confirmDelete: document.querySelector("[data-confirm-delete]")
     };
 
     refs.userName.textContent = user.name || "User";
@@ -59,8 +64,13 @@
     refs.logout.addEventListener("click", logout);
     refs.taskCreateForm.addEventListener("submit", handleTaskCreate);
     refs.taskModal.addEventListener("click", handleModalBackdropClick);
+    refs.confirmDeleteModal.addEventListener("click", handleDeleteModalBackdropClick);
+    refs.confirmDelete.addEventListener("click", confirmDeleteTask);
     document.querySelectorAll("[data-close-task-modal]").forEach(function (button) {
         button.addEventListener("click", closeTaskModal);
+    });
+    document.querySelectorAll("[data-cancel-delete]").forEach(function (button) {
+        button.addEventListener("click", closeDeleteConfirm);
     });
     document.querySelectorAll("[data-open-task-modal]").forEach(function (button) {
         button.addEventListener("click", function () {
@@ -70,6 +80,9 @@
     document.addEventListener("keydown", function (event) {
         if (event.key === "Escape" && !refs.taskModal.hidden) {
             closeTaskModal();
+        }
+        if (event.key === "Escape" && !refs.confirmDeleteModal.hidden) {
+            closeDeleteConfirm();
         }
     });
     refs.dashboard.addEventListener("click", handleTaskClick);
@@ -276,10 +289,46 @@
         }
 
         if (action.dataset.taskAction === "delete") {
-            if (window.confirm("'" + taskTitle + "'을 삭제할까요?")) {
-                await deleteTask(taskId);
-            }
+            openDeleteConfirm(taskId, taskTitle);
         }
+    }
+
+    function openDeleteConfirm(taskId, taskTitle) {
+        pendingDeleteTaskId = taskId;
+        lastFocusedElement = document.activeElement;
+        refs.deleteConfirmTitle.textContent = "Task를 삭제할까요?";
+        refs.deleteConfirmMessage.textContent = "'" + taskTitle + "'을 삭제하면 완료 기록과 알림 연결도 함께 정리됩니다.";
+        refs.confirmDeleteModal.hidden = false;
+        document.body.classList.add("modal-open");
+        refs.confirmDelete.focus();
+    }
+
+    function closeDeleteConfirm() {
+        pendingDeleteTaskId = null;
+        refs.confirmDeleteModal.hidden = true;
+        document.body.classList.remove("modal-open");
+        if (lastFocusedElement && typeof lastFocusedElement.focus === "function") {
+            lastFocusedElement.focus();
+        }
+    }
+
+    function handleDeleteModalBackdropClick(event) {
+        if (event.target === refs.confirmDeleteModal) {
+            closeDeleteConfirm();
+        }
+    }
+
+    async function confirmDeleteTask() {
+        if (!pendingDeleteTaskId) {
+            closeDeleteConfirm();
+            return;
+        }
+
+        const taskId = pendingDeleteTaskId;
+        refs.confirmDelete.disabled = true;
+        await deleteTask(taskId);
+        refs.confirmDelete.disabled = false;
+        closeDeleteConfirm();
     }
 
     async function completeTask(taskId) {
@@ -406,18 +455,19 @@
     }
 
     function renderTasks(tasks, priorityTasks) {
-        const dailyGoals = tasks.filter(function (task) {
+        const actionableTasks = tasks.filter(isActionableTask);
+        const dailyGoals = actionableTasks.filter(function (task) {
             return task.taskType === "DAILY_GOAL";
         }).sort(function (a, b) {
             return (b.currentStreak || 0) - (a.currentStreak || 0);
         });
-        const deadlineTasks = tasks.filter(function (task) {
+        const deadlineTasks = actionableTasks.filter(function (task) {
             return task.taskType === "DEADLINE_TASK";
         }).sort(function (a, b) {
             return dateValue(a.deadlineAt) - dateValue(b.deadlineAt);
         });
-        const priority = priorityTasks.length > 0 ? priorityTasks : tasks
-                .filter(function (task) { return task.status !== "DONE"; })
+        const priorityCandidates = priorityTasks.length > 0 ? priorityTasks.filter(isActionableTask) : actionableTasks;
+        const priority = priorityCandidates
                 .sort(function (a, b) {
                     return priorityScore(b) - priorityScore(a);
                 })
@@ -429,6 +479,18 @@
         renderTaskList(refs.dailyList, dailyGoals, "아직 Daily Goal이 없습니다.");
         renderTaskList(refs.deadlineList, deadlineTasks, "아직 Task가 없습니다.");
         renderPriorityList(priority);
+    }
+
+    function isActionableTask(task) {
+        return task && task.status !== "DONE"
+                && (task.taskType !== "DEADLINE_TASK" || isDeadlineStillOpen(task));
+    }
+
+    function isDeadlineStillOpen(task) {
+        if (!task.deadlineAt) {
+            return true;
+        }
+        return new Date(task.deadlineAt).getTime() >= Date.now();
     }
 
     function renderTaskList(container, tasks, emptyText) {

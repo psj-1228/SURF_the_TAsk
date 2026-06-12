@@ -82,6 +82,7 @@
 
         state.tasks = result.ok ? asArray(result.data) : [];
         renderTaskOptions();
+        selectFirstTaskIfAvailable();
         handleTaskSelection();
         setMessage(result.ok ? "과제를 선택하거나 자유 항해로 시작하세요." : "과제 목록을 불러오지 못했습니다. 자유 항해는 바로 시작할 수 있습니다.", !result.ok);
     }
@@ -107,7 +108,18 @@
                 .sort(compareTasks)
                 .forEach(function (task) {
                     refs.taskSelect.appendChild(option(String(task.taskId), taskOptionLabel(task)));
-                });
+        });
+    }
+
+    function selectFirstTaskIfAvailable() {
+        const firstTask = state.tasks
+                .filter(function (task) { return task.status !== "DONE"; })
+                .sort(compareTasks)[0];
+
+        if (firstTask) {
+            refs.taskSelect.value = String(firstTask.taskId);
+            state.remainingSeconds = state.durationSeconds;
+        }
     }
 
     function handleTaskSelection() {

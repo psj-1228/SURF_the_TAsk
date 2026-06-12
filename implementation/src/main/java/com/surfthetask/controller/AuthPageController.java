@@ -31,9 +31,24 @@ public class AuthPageController {
         return "schedule/index";
     }
 
+    @GetMapping("/daily-goals")
+    public String dailyGoals() {
+        return "tasks/daily-goals";
+    }
+
+    @GetMapping("/tasks")
+    public String tasks() {
+        return "tasks/deadline-tasks";
+    }
+
     @GetMapping("/progress")
     public String progress() {
         return "progress/index";
+    }
+
+    @GetMapping("/reminders")
+    public String reminders() {
+        return "reminders/index";
     }
 
     @GetMapping("/focus")

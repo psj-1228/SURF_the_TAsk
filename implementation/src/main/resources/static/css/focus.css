@@ -364,53 +364,58 @@ button:disabled {
     position: absolute;
     left: 10%;
     top: 72%;
-    width: 74px;
-    height: 80px;
+    width: 92px;
+    height: 86px;
     z-index: 6;
-    transform: translate(-50%, -50%) rotate(14deg);
+    transform: translate(-50%, -50%) rotate(11deg);
     animation: routeVoyage 14s ease-in-out infinite;
 }
 
 .route-mast {
     position: absolute;
-    left: 36px;
-    top: 8px;
+    left: 45px;
+    top: 6px;
     width: 3px;
-    height: 54px;
+    height: 60px;
     border-radius: 999px;
-    background: rgba(248, 253, 255, 0.92);
+    background: rgba(250, 254, 255, 0.98);
     box-shadow: 0 0 12px rgba(191, 242, 219, 0.34);
 }
 
 .route-sail {
     position: absolute;
-    top: 10px;
-    width: 0;
-    height: 0;
-    filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.18));
+    top: 8px;
+    filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.2));
 }
 
 .route-sail-main {
-    left: 40px;
-    border-top: 48px solid rgba(255, 255, 255, 0.96);
-    border-right: 28px solid transparent;
+    left: 49px;
+    width: 34px;
+    height: 56px;
+    border-radius: 0 70% 10% 0;
+    background: linear-gradient(135deg, #ffffff 0%, #dff8ff 100%);
+    clip-path: polygon(0 0, 100% 86%, 0 100%);
 }
 
 .route-sail-side {
-    left: 12px;
-    border-top: 42px solid rgba(191, 242, 219, 0.92);
-    border-left: 22px solid transparent;
+    left: 18px;
+    width: 29px;
+    height: 49px;
+    border-radius: 70% 0 0 12%;
+    background: linear-gradient(150deg, rgba(191, 242, 219, 0.98), rgba(32, 180, 180, 0.9));
+    clip-path: polygon(100% 4%, 0 88%, 100% 100%);
 }
 
 .route-hull {
     position: absolute;
-    left: 12px;
-    bottom: 11px;
-    width: 56px;
-    height: 15px;
-    border-radius: 8px 8px 34px 34px;
+    left: 13px;
+    bottom: 8px;
+    width: 70px;
+    height: 17px;
+    border-radius: 8px 8px 36px 36px;
     background:
-            linear-gradient(90deg, #f3fbff, #21a9bd 48%, #0b6886);
+            radial-gradient(circle at 42% 0, #ffffff 0 12%, transparent 13%),
+            linear-gradient(90deg, #f5fbff 0%, #21a9bd 45%, #0b6886 100%);
     box-shadow: 0 12px 18px rgba(1, 21, 35, 0.24);
 }
 

@@ -5,6 +5,9 @@
     const dayEndMinutes = 24 * 60;
     const hourHeight = 52;
     const dayHeight = ((dayEndMinutes - dayStartMinutes) / 60) * hourHeight;
+    let editingScheduleId = null;
+    let pendingDeleteScheduleId = null;
+    let lastFocusedElement = null;
     const days = [
         { value: "MONDAY", label: "월" },
         { value: "TUESDAY", label: "화" },
@@ -30,7 +33,15 @@
         scheduleCount: document.querySelector("[data-schedule-count]"),
         availabilityHours: document.querySelector("[data-availability-hours]"),
         nextAvailability: document.querySelector("[data-next-availability]"),
-        nextAvailabilityDay: document.querySelector("[data-next-availability-day]")
+        nextAvailabilityDay: document.querySelector("[data-next-availability-day]"),
+        scheduleMode: document.querySelector("[data-schedule-mode]"),
+        scheduleFormTitle: document.querySelector("[data-schedule-form-title]"),
+        scheduleSubmit: document.querySelector("[data-schedule-submit]"),
+        cancelScheduleEdit: document.querySelector("[data-cancel-schedule-edit]"),
+        confirmDeleteModal: document.querySelector("[data-confirm-delete-modal]"),
+        deleteConfirmTitle: document.querySelector("[data-delete-confirm-title]"),
+        deleteConfirmMessage: document.querySelector("[data-delete-confirm-message]"),
+        confirmDelete: document.querySelector("[data-confirm-delete]")
     };
 
     refs.date.textContent = new Intl.DateTimeFormat("ko-KR", {
@@ -41,11 +52,26 @@
     }).format(new Date());
 
     refs.logout.addEventListener("click", logout);
-    refs.form.addEventListener("submit", handleCreateSchedule);
+    refs.form.addEventListener("submit", handleSaveSchedule);
     refs.form.addEventListener("reset", function () {
-        window.setTimeout(clearFormMessage, 0);
+        window.setTimeout(function () {
+            editingScheduleId = null;
+            updateScheduleFormMode();
+            clearFormMessage();
+        }, 0);
     });
     refs.list.addEventListener("click", handleScheduleListClick);
+    refs.cancelScheduleEdit.addEventListener("click", resetScheduleForm);
+    refs.confirmDeleteModal.addEventListener("click", handleDeleteModalBackdropClick);
+    refs.confirmDelete.addEventListener("click", confirmDeleteSchedule);
+    document.querySelectorAll("[data-cancel-delete]").forEach(function (button) {
+        button.addEventListener("click", closeDeleteConfirm);
+    });
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && !refs.confirmDeleteModal.hidden) {
+            closeDeleteConfirm();
+        }
+    });
 
     buildGridShell();
     loadSchedulePage();
@@ -87,7 +113,7 @@
         }
     }
 
-    async function handleCreateSchedule(event) {
+    async function handleSaveSchedule(event) {
         event.preventDefault();
 
         if (!refs.form.reportValidity()) {
@@ -101,8 +127,14 @@
             return;
         }
 
+        const url = editingScheduleId
+                ? "/api/schedules/" + encodeURIComponent(editingScheduleId)
+                : "/api/schedules";
+        const method = editingScheduleId ? "PUT" : "POST";
+        const successMessage = editingScheduleId ? "일정을 수정했습니다." : "일정이 등록되었습니다.";
+
         setFormBusy(true);
-        const result = await sendJson("/api/schedules", "POST", payload);
+        const result = await sendJson(url, method, payload);
         setFormBusy(false);
 
         if (!result.ok) {
@@ -110,14 +142,18 @@
             return;
         }
 
-        refs.form.reset();
-        refs.form.elements.startTime.value = "09:00";
-        refs.form.elements.endTime.value = "10:15";
-        setFormMessage("일정이 등록되었습니다.");
+        resetScheduleForm();
+        setFormMessage(successMessage);
         await loadSchedulePage();
     }
 
     async function handleScheduleListClick(event) {
+        const editButton = event.target.closest("[data-edit-schedule]");
+        if (editButton) {
+            startScheduleEdit(editButton);
+            return;
+        }
+
         const button = event.target.closest("[data-delete-schedule]");
         if (!button) {
             return;
@@ -125,19 +161,83 @@
 
         const scheduleId = button.dataset.deleteSchedule;
         const title = button.dataset.scheduleTitle || "일정";
-        if (!window.confirm("'" + title + "'을 삭제할까요?")) {
+        openDeleteConfirm(scheduleId, title);
+    }
+
+    function startScheduleEdit(button) {
+        editingScheduleId = button.dataset.editSchedule;
+        refs.form.elements.title.value = button.dataset.scheduleTitle || "";
+        refs.form.elements.dayOfWeek.value = button.dataset.scheduleDay || "MONDAY";
+        refs.form.elements.startTime.value = trimTime(button.dataset.scheduleStart || "09:00");
+        refs.form.elements.endTime.value = trimTime(button.dataset.scheduleEnd || "10:15");
+        refs.form.elements.repeatType.value = button.dataset.scheduleRepeat || "WEEKLY";
+        updateScheduleFormMode();
+        clearFormMessage();
+        if (window.innerWidth < 900) {
+            refs.form.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+        refs.form.elements.title.focus();
+    }
+
+    function resetScheduleForm() {
+        editingScheduleId = null;
+        refs.form.reset();
+        refs.form.elements.startTime.value = "09:00";
+        refs.form.elements.endTime.value = "10:15";
+        updateScheduleFormMode();
+    }
+
+    function updateScheduleFormMode() {
+        const isEditing = editingScheduleId !== null;
+        refs.scheduleMode.textContent = isEditing ? "Edit schedule" : "Add schedule";
+        refs.scheduleFormTitle.textContent = isEditing ? "일정 수정" : "일정 추가";
+        refs.scheduleSubmit.textContent = isEditing ? "수정 저장" : "저장";
+        refs.cancelScheduleEdit.hidden = !isEditing;
+    }
+
+    function openDeleteConfirm(scheduleId, title) {
+        pendingDeleteScheduleId = scheduleId;
+        lastFocusedElement = document.activeElement;
+        refs.deleteConfirmTitle.textContent = "일정을 삭제할까요?";
+        refs.deleteConfirmMessage.textContent = "'" + title + "'을 삭제하면 가능 시간 계산에서 바로 제외됩니다.";
+        refs.confirmDeleteModal.hidden = false;
+        document.body.classList.add("modal-open");
+        refs.confirmDelete.focus();
+    }
+
+    function closeDeleteConfirm() {
+        pendingDeleteScheduleId = null;
+        refs.confirmDeleteModal.hidden = true;
+        document.body.classList.remove("modal-open");
+        if (lastFocusedElement && typeof lastFocusedElement.focus === "function") {
+            lastFocusedElement.focus();
+        }
+    }
+
+    function handleDeleteModalBackdropClick(event) {
+        if (event.target === refs.confirmDeleteModal) {
+            closeDeleteConfirm();
+        }
+    }
+
+    async function confirmDeleteSchedule() {
+        if (!pendingDeleteScheduleId) {
+            closeDeleteConfirm();
             return;
         }
 
-        button.disabled = true;
+        const scheduleId = pendingDeleteScheduleId;
+        refs.confirmDelete.disabled = true;
         const result = await sendJson("/api/schedules/" + encodeURIComponent(scheduleId), "DELETE");
-        button.disabled = false;
+        refs.confirmDelete.disabled = false;
 
         if (!result.ok) {
             setMessage(formatError(result.data), true);
+            closeDeleteConfirm();
             return;
         }
 
+        closeDeleteConfirm();
         setMessage("일정이 삭제되었습니다.");
         await loadSchedulePage();
     }
@@ -214,9 +314,18 @@
                     + trimTime(schedule.startTime) + " - " + trimTime(schedule.endTime)
                     + " | " + repeatLabel(schedule.repeatType) + "</span>"
                     + "</div>"
+                    + "<div class=\"registered-actions\">"
+                    + "<button class=\"small-button\" type=\"button\" data-edit-schedule=\""
+                    + schedule.scheduleId + "\" data-schedule-title=\""
+                    + escapeHtml(schedule.title || "일정") + "\" data-schedule-day=\""
+                    + schedule.dayOfWeek + "\" data-schedule-start=\""
+                    + trimTime(schedule.startTime) + "\" data-schedule-end=\""
+                    + trimTime(schedule.endTime) + "\" data-schedule-repeat=\""
+                    + (schedule.repeatType || "WEEKLY") + "\">수정</button>"
                     + "<button class=\"small-button danger\" type=\"button\" data-delete-schedule=\""
                     + schedule.scheduleId + "\" data-schedule-title=\""
-                    + escapeHtml(schedule.title || "일정") + "\">삭제</button>";
+                    + escapeHtml(schedule.title || "일정") + "\">삭제</button>"
+                    + "</div>";
             refs.list.appendChild(item);
         });
     }

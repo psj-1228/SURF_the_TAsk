@@ -5,25 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SURF the TAsk | 회원가입</title>
     <link rel="stylesheet" href="/css/auth.css">
+    <link rel="stylesheet" href="/css/modern.css">
     <script defer src="/js/auth.js"></script>
 </head>
 <body>
-<main class="auth-shell">
-    <section class="surf-visual" aria-label="SURF the TAsk 해변 배경"></section>
+<main class="auth-shell" data-prototype-screen="auth">
+    <section class="surf-visual auth-brand-panel" aria-label="SURF the TAsk 해변 배경">
+        <div class="auth-hero-copy">
+            <strong>SURF<br><span>the TAsk</span></strong>
+            <p>스마트한 계획, 더 나은 하루<br>SURF the TAsk와 함께하세요.</p>
+        </div>
+    </section>
 
     <section class="auth-panel" aria-label="회원가입">
-        <a class="compact-brand" href="/login" aria-label="SURF the TAsk 로그인">
-            <span class="brand-mark" aria-hidden="true">S</span>
-            <span>
-                <strong>SURF the TAsk</strong>
-                <small>Availability-aware planner</small>
-            </span>
-        </a>
-
         <div class="auth-copy">
-            <p class="eyebrow">Create account</p>
-            <h2>나만의 Task 파도를 만들 계정을 생성하세요.</h2>
-            <p>가입 후 개인 시간표와 Daily Goal, Deadline Task를 연결해 대시보드를 구성할 수 있습니다.</p>
+            <h2>회원가입</h2>
+            <p>계정을 만들고 오늘의 계획을 시작하세요.</p>
         </div>
 
         <form class="auth-form" data-auth-form="register" novalidate>

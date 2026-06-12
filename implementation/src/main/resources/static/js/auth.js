@@ -7,7 +7,17 @@
 
     const message = form.querySelector("[data-form-message]");
     const submitButton = form.querySelector("button[type='submit']");
+    const passwordFindLink = document.querySelector("[data-password-find]");
+    const authToast = document.querySelector("[data-auth-toast]");
     const mode = form.dataset.authForm;
+    let authToastTimer = null;
+
+    if (passwordFindLink && authToast) {
+        passwordFindLink.addEventListener("click", function (event) {
+            event.preventDefault();
+            showAuthToast("개발 진행 중입니다.");
+        });
+    }
 
     form.addEventListener("submit", async function (event) {
         event.preventDefault();
@@ -85,6 +95,17 @@
     function clearMessage() {
         message.textContent = "";
         message.className = "form-message";
+    }
+
+    function showAuthToast(text) {
+        window.clearTimeout(authToastTimer);
+        authToast.textContent = text;
+        authToast.hidden = false;
+        authToast.classList.add("is-visible");
+        authToastTimer = window.setTimeout(function () {
+            authToast.classList.remove("is-visible");
+            authToast.hidden = true;
+        }, 2200);
     }
 
     function setBusy(isBusy) {

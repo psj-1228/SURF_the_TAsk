@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SURF the TAsk | 알림</title>
+    <link rel="stylesheet" href="/css/modern.css">
+    <script defer src="/js/reminders.js"></script>
+</head>
+<body>
+<div class="modern-shell" data-reminders-page>
+    <aside class="side-nav modern-side-nav" aria-label="주요 메뉴">
+        <a class="side-brand" href="/dashboard" aria-label="SURF the TAsk 대시보드">
+            <span>SURF</span>
+            <strong>the TAsk</strong>
+        </a>
+
+        <nav class="nav-list">
+            <a href="/dashboard">대시보드</a>
+            <a href="/schedule">개인 시간표</a>
+            <a href="/daily-goals">매일 목표</a>
+            <a href="/tasks">마감 업무</a>
+            <a href="/focus">집중 모드</a>
+            <a href="/progress">진행 현황</a>
+            <a class="active" href="/reminders">알림</a>
+        </nav>
+    </aside>
+
+    <main class="modern-main reminders-main">
+        <header class="modern-topbar">
+            <div>
+                <p class="eyebrow">Reminder center</p>
+                <h1>알림 및 설정</h1>
+                <p data-reminders-date>알림 흐름을 불러오는 중입니다.</p>
+            </div>
+            <div class="topbar-actions">
+                <a class="ghost-link" href="/dashboard">대시보드</a>
+                <button class="ghost-button" type="button" data-logout>로그아웃</button>
+            </div>
+        </header>
+
+        <section class="modern-summary-grid" aria-label="알림 요약">
+            <article class="summary-item">
+                <span>전체 알림</span>
+                <strong data-total-reminders>0</strong>
+                <small>최근 생성 기준</small>
+            </article>
+            <article class="summary-item">
+                <span>전송됨</span>
+                <strong data-sent-reminders>0</strong>
+                <small>대시보드 팝업 포함</small>
+            </article>
+            <article class="summary-item">
+                <span>대기 중</span>
+                <strong data-pending-reminders>0</strong>
+                <small>예약된 알림</small>
+            </article>
+        </section>
+
+        <section class="reminders-grid">
+            <article class="panel reminder-history-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">History</p>
+                        <h2>알림 기록</h2>
+                    </div>
+                    <span class="count-badge" data-reminder-history-count>0</span>
+                </div>
+                <div class="reminder-history-list" data-reminder-history-list></div>
+            </article>
+
+            <aside class="panel preference-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Preference</p>
+                        <h2>알림 설정</h2>
+                    </div>
+                </div>
+
+                <form class="preference-form" data-notification-preference-form>
+                    <label class="toggle-row">
+                        <span>
+                            <strong>이메일 알림</strong>
+                            <small>마감 임박과 하루 목표 리마인더를 이메일로 받습니다.</small>
+                        </span>
+                        <input name="emailEnabled" type="checkbox" checked>
+                    </label>
+                    <label class="toggle-row">
+                        <span>
+                            <strong>인사이트 알림</strong>
+                            <small>앱 안에서 가능한 시간과 지연 알림을 보여줍니다.</small>
+                        </span>
+                        <input name="inSiteEnabled" type="checkbox" checked>
+                    </label>
+                    <label class="toggle-row">
+                        <span>
+                            <strong>가능 시간 알림</strong>
+                            <small>빈 시간이 생기면 대시보드에서 알려줍니다.</small>
+                        </span>
+                        <input name="availabilityReminderEnabled" type="checkbox" checked>
+                    </label>
+                    <label class="toggle-row">
+                        <span>
+                            <strong>마감 알림</strong>
+                            <small>마감 1시간/30분 전 경고를 유지합니다.</small>
+                        </span>
+                        <input name="deadlineReminderEnabled" type="checkbox" checked>
+                    </label>
+                    <label class="field">
+                        <span>최소 알림 간격</span>
+                        <input name="minimumIntervalMinutes" data-minimum-interval-minutes type="number" min="1" value="60" required>
+                    </label>
+
+                    <p class="form-message" data-preference-message role="status" aria-live="polite"></p>
+
+                    <div class="modal-actions">
+                        <button class="primary-button" type="submit">설정 저장</button>
+                    </div>
+                </form>
+            </aside>
+        </section>
+
+        <p class="load-message" data-reminders-message role="status" aria-live="polite"></p>
+    </main>
+</div>
+</body>
+</html>

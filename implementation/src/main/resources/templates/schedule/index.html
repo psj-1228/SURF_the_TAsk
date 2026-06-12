@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SURF the TAsk | 개인 시간표</title>
     <link rel="stylesheet" href="/css/schedule.css">
+    <link rel="stylesheet" href="/css/modern.css">
     <script defer src="/js/schedule.js"></script>
 </head>
 <body>
-<div class="schedule-shell" data-schedule-page>
+<div class="schedule-shell" data-schedule-page data-prototype-screen="schedule">
     <aside class="side-nav" aria-label="주요 메뉴">
         <a class="side-brand" href="/dashboard" aria-label="SURF the TAsk 대시보드">
             <span>SURF</span>
@@ -18,10 +19,11 @@
         <nav class="nav-list">
             <a href="/dashboard">대시보드</a>
             <a class="active" href="/schedule">개인 시간표</a>
-            <a href="/dashboard#daily-goals">매일 목표</a>
-            <a href="/dashboard#deadline-tasks">마감 업무</a>
+            <a href="/daily-goals">매일 목표</a>
+            <a href="/tasks">마감 업무</a>
             <a href="/focus">집중 모드</a>
             <a href="/progress">진행 현황</a>
+            <a href="/reminders">알림</a>
         </nav>
     </aside>
 
@@ -33,6 +35,7 @@
                 <p data-schedule-date>오늘의 시간표를 불러오는 중입니다.</p>
             </div>
             <div class="topbar-actions">
+                <a class="progress-link" href="#schedule-editor">+ 일정 추가</a>
                 <a class="ghost-link" href="/dashboard">대시보드</a>
                 <button class="ghost-button" type="button" data-logout>로그아웃</button>
             </div>
@@ -71,11 +74,11 @@
             </article>
 
             <aside class="schedule-side">
-                <section class="editor-panel" aria-label="개인 일정 등록">
+                <section class="editor-panel" id="schedule-editor" aria-label="개인 일정 등록">
                     <div class="panel-heading">
                         <div>
-                            <p class="eyebrow">Add schedule</p>
-                            <h2>일정 추가</h2>
+                            <p class="eyebrow" data-schedule-mode>Add schedule</p>
+                            <h2 data-schedule-form-title>일정 추가</h2>
                         </div>
                     </div>
 
@@ -99,11 +102,11 @@
                         <div class="form-row">
                             <label>
                                 <span>시작 시간</span>
-                                <input name="startTime" type="time" min="07:00" max="23:30" value="09:00" required>
+                                <input name="startTime" type="time" min="07:00" max="23:30" step="300" value="09:00" required>
                             </label>
                             <label>
                                 <span>종료 시간</span>
-                                <input name="endTime" type="time" min="07:30" max="23:59" value="10:15" required>
+                                <input name="endTime" type="time" min="07:30" max="23:59" step="300" value="10:15" required>
                             </label>
                         </div>
 
@@ -116,11 +119,17 @@
                             </select>
                         </label>
 
+                        <label>
+                            <span>메모 (선택 사항)</span>
+                            <textarea name="memo" rows="3" maxlength="120" placeholder="메모를 입력하세요" data-schedule-memo></textarea>
+                        </label>
+
                         <p class="form-message" data-schedule-form-message role="status" aria-live="polite"></p>
 
                         <div class="form-actions">
-                            <button class="small-button" type="reset">취소</button>
-                            <button class="primary-button" type="submit">저장</button>
+                            <button class="small-button" type="button" data-cancel-schedule-edit hidden>수정 취소</button>
+                            <button class="small-button" type="reset">초기화</button>
+                            <button class="primary-button" type="submit" data-schedule-submit>저장</button>
                         </div>
                     </form>
                 </section>
@@ -149,6 +158,23 @@
 
         <p class="load-message" data-schedule-message role="status" aria-live="polite"></p>
     </main>
+</div>
+
+<div class="modal-backdrop" data-confirm-delete-modal hidden>
+    <section class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="schedule-delete-confirm-title">
+        <div class="modal-header">
+            <div>
+                <p class="eyebrow">Delete</p>
+                <h2 id="schedule-delete-confirm-title" data-delete-confirm-title>일정을 삭제할까요?</h2>
+            </div>
+            <button class="icon-button" type="button" aria-label="닫기" data-cancel-delete>&times;</button>
+        </div>
+        <p data-delete-confirm-message>삭제한 일정은 가능 시간 계산에서 바로 제외됩니다.</p>
+        <div class="modal-actions">
+            <button class="small-button" type="button" data-cancel-delete>취소</button>
+            <button class="small-button danger" type="button" data-confirm-delete>삭제</button>
+        </div>
+    </section>
 </div>
 </body>
 </html>

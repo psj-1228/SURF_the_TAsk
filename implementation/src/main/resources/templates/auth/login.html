@@ -5,25 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SURF the TAsk | 로그인</title>
     <link rel="stylesheet" href="/css/auth.css">
+    <link rel="stylesheet" href="/css/modern.css">
     <script defer src="/js/auth.js"></script>
 </head>
 <body>
-<main class="auth-shell">
-    <section class="surf-visual" aria-label="SURF the TAsk 해변 배경"></section>
+<main class="auth-shell" data-prototype-screen="auth">
+    <section class="surf-visual auth-brand-panel" aria-label="SURF the TAsk 해변 배경">
+        <div class="auth-hero-copy">
+            <strong>SURF<br><span>the TAsk</span></strong>
+            <p>스마트한 계획, 더 나은 하루<br>SURF the TAsk와 함께하세요.</p>
+        </div>
+    </section>
 
     <section class="auth-panel" aria-label="로그인">
-        <a class="compact-brand" href="/login" aria-label="SURF the TAsk 로그인">
-            <span class="brand-mark" aria-hidden="true">S</span>
-            <span>
-                <strong>SURF the TAsk</strong>
-                <small>Availability-aware planner</small>
-            </span>
-        </a>
-
         <div class="auth-copy">
-            <p class="eyebrow">Welcome back</p>
-            <h2>오늘의 Task를 서핑하러 갈 시간입니다.</h2>
-            <p>로그인하면 사용자별 대시보드에서 오늘의 목표, 마감 업무, 가용 시간을 바로 확인할 수 있습니다.</p>
+            <h2>로그인</h2>
+            <p>계정에 로그인하여 계속하세요.</p>
         </div>
 
         <form class="auth-form" data-auth-form="login" novalidate>
@@ -34,10 +31,18 @@
 
             <div class="field">
                 <label for="password">비밀번호</label>
-                <input id="password" name="password" type="password" autocomplete="current-password" required>
+                <div class="password-field">
+                    <input id="password" name="password" type="password" autocomplete="current-password" placeholder="비밀번호를 입력하세요" required>
+                    <span aria-hidden="true">◎</span>
+                </div>
+            </div>
+
+            <div class="login-options">
+                <a class="password-find-link" href="/login" data-password-find>비밀번호 찾기</a>
             </div>
 
             <p class="form-message" data-form-message role="status" aria-live="polite"></p>
+            <div class="auth-toast" data-auth-toast role="status" aria-live="polite" hidden></div>
 
             <button class="primary-button" type="submit">로그인</button>
         </form>

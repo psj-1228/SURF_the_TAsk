@@ -116,6 +116,23 @@ Private helpers added inside `ReminderService`:
 - `dashboard/index.html` adds `data-reminder-toast-region` for the accessible in-site reminder toast region.
 - `dashboard.js` also treats sent Daily Goal day-end and Deadline Task email reminders as dashboard popup candidates so deadline warnings appear while the user is on the dashboard.
 
+## Modern Frontend UI Surface Additions
+
+### Reason
+
+The UI state-machine document includes reminder review/settings and confirmation states that were only partially represented through dashboard previews or native browser dialogs. The modernized frontend adds explicit browser-facing surfaces and hooks while reusing the existing REST API contracts.
+
+### MVC Route Added
+
+- `AuthPageController.reminders()`: renders `/reminders` as the dedicated reminder history and notification preference screen.
+
+### Frontend Hooks Added
+
+- `reminders/index.html` and `reminders.js`: show reminder history from `GET /api/reminders` and update preferences through `PATCH /api/notification-preference`.
+- `modern.css`: shared visual system layer for the modernized app shell, cards, buttons, confirmation dialogs, and reminder settings layout.
+- `dashboard/index.html` and `dashboard.js`: replace native task delete confirmation with an accessible in-app confirmation dialog.
+- `schedule/index.html` and `schedule.js`: add schedule edit mode for `PUT /api/schedules/{scheduleId}` and replace native schedule delete confirmation with an accessible in-app confirmation dialog.
+
 ## Daily Goal Rollover Backend Additions
 
 ### Reason
@@ -134,4 +151,5 @@ Daily Goal은 매일 다시 수행 여부를 체크하는 반복 목표이므로
 - `DailyGoalRepository.findByStatusInOrLastCompletedDateBefore(List<TaskStatus> statuses, LocalDate lastCompletedDate)`: 완료/진행 중이거나 마지막 완료일이 오늘 이전인 Daily Goal 후보를 조회한다.
 
 ### Entity Method Added
+
 - `DailyGoal.resetStreak()`: 누락된 날짜가 확인된 Daily Goal의 `currentStreak`를 초기화한다. 기존 `recordCompletion(LocalDate)`의 streak 증가 규칙은 유지한다.
