@@ -621,12 +621,10 @@
     }
 
     function handleInSiteReminderDisplay(reminders) {
-        const inSiteSentReminders = asArray(reminders).filter(function (reminder) {
-            return reminder.channel === "IN_SITE" && reminder.status === "SENT";
-        });
+        const popupReminders = asArray(reminders).filter(isPopupReminder);
 
         if (!hasLoadedInitialReminders) {
-            inSiteSentReminders.forEach(function (reminder) {
+            popupReminders.forEach(function (reminder) {
                 const reminderId = reminder.reminderId;
 
                 if (reminderId === null || reminderId === undefined) {
@@ -644,7 +642,7 @@
             return;
         }
 
-        inSiteSentReminders.forEach(function (reminder) {
+        popupReminders.forEach(function (reminder) {
             const reminderId = reminder.reminderId;
 
             if (reminderId === null || reminderId === undefined) {
@@ -658,6 +656,18 @@
             showReminderToast(reminder);
             rememberDisplayedReminder(reminderId);
         });
+    }
+
+    function isPopupReminder(reminder) {
+        return reminder && reminder.status === "SENT"
+                && (reminder.channel === "IN_SITE" || isDeadlinePopupReminderType(reminder.reminderType));
+    }
+
+    function isDeadlinePopupReminderType(value) {
+        return value === "DEADLINE_ONE_HOUR"
+                || value === "DEADLINE_THIRTY_MINUTES"
+                || value === "DAILY_GOAL_DAY_END_ONE_HOUR"
+                || value === "DAILY_GOAL_DAY_END_THIRTY_MINUTES";
     }
 
     function showReminderToast(reminder) {

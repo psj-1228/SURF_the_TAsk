@@ -114,3 +114,4 @@ Private helpers added inside `ReminderService`:
 ### Frontend Hook Added
 
 - `dashboard/index.html` adds `data-reminder-toast-region` for the accessible in-site reminder toast region.
+- `dashboard.js` also treats sent Daily Goal day-end and Deadline Task email reminders as dashboard popup candidates so deadline warnings appear while the user is on the dashboard.
