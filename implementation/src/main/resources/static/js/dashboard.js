@@ -2,6 +2,12 @@
     const storageKey = "surfUser";
     const user = readStoredUser();
     let lastFocusedElement = null;
+    const displayedReminderStorageKey = "surfDisplayedReminderIds";
+    const reminderPollIntervalMs = 30000;
+    const initialReminderReplayWindowMs = 30 * 60 * 1000;
+    let displayedReminderIds = readDisplayedReminderIds();
+    let hasLoadedInitialReminders = false;
+    let reminderPollTimer = null;
 
     if (!user.token) {
         window.location.href = "/login";
@@ -14,6 +20,7 @@
         todayLabel: document.querySelector("[data-today-label]"),
         logout: document.querySelector("[data-logout]"),
         loadMessage: document.querySelector("[data-load-message]"),
+        reminderToastRegion: document.querySelector("[data-reminder-toast-region]"),
         taskModal: document.querySelector("[data-task-modal]"),
         taskCreateForm: document.querySelector("[data-task-create-form]"),
         taskModalTitle: document.querySelector("[data-task-modal-title]"),
@@ -68,7 +75,7 @@
     refs.dashboard.addEventListener("click", handleTaskClick);
     refs.dashboard.addEventListener("submit", handleTaskEdit);
 
-    loadDashboard();
+    loadDashboard().then(startReminderPolling);
 
     async function loadDashboard() {
         setMessage("대시보드 데이터를 불러오는 중입니다.");
@@ -95,6 +102,9 @@
         renderTasks(taskList, asArray(progress.priorityTasks));
         renderAvailability(availability);
         renderReminders(reminders);
+        if (remindersResult.ok) {
+            handleInSiteReminderDisplay(reminders);
+        }
 
         const failed = [progressResult, tasksResult, availabilityResult, remindersResult].filter(function (result) {
             return !result.ok;
@@ -585,6 +595,160 @@
         });
     }
 
+    function startReminderPolling() {
+        if (reminderPollTimer !== null) {
+            return;
+        }
+
+        reminderPollTimer = window.setInterval(pollReminders, reminderPollIntervalMs);
+    }
+
+    async function pollReminders() {
+        const result = await fetchJson("/api/reminders");
+
+        if (isUnauthorized(result)) {
+            redirectToLogin();
+            return;
+        }
+
+        if (!result.ok) {
+            return;
+        }
+
+        const reminders = asArray(result.data);
+        renderReminders(reminders);
+        handleInSiteReminderDisplay(reminders);
+    }
+
+    function handleInSiteReminderDisplay(reminders) {
+        const popupReminders = asArray(reminders).filter(isPopupReminder);
+
+        if (!hasLoadedInitialReminders) {
+            popupReminders.forEach(function (reminder) {
+                const reminderId = reminder.reminderId;
+
+                if (reminderId === null || reminderId === undefined) {
+                    return;
+                }
+
+                if (!displayedReminderIds.includes(String(reminderId))
+                        && isRecentReminder(reminder, initialReminderReplayWindowMs)) {
+                    showReminderToast(reminder);
+                }
+
+                rememberDisplayedReminder(reminderId);
+            });
+            hasLoadedInitialReminders = true;
+            return;
+        }
+
+        popupReminders.forEach(function (reminder) {
+            const reminderId = reminder.reminderId;
+
+            if (reminderId === null || reminderId === undefined) {
+                return;
+            }
+
+            if (displayedReminderIds.includes(String(reminderId))) {
+                return;
+            }
+
+            showReminderToast(reminder);
+            rememberDisplayedReminder(reminderId);
+        });
+    }
+
+    function isPopupReminder(reminder) {
+        return reminder && reminder.status === "SENT"
+                && (reminder.channel === "IN_SITE" || isDeadlinePopupReminderType(reminder.reminderType));
+    }
+
+    function isDeadlinePopupReminderType(value) {
+        return value === "DEADLINE_ONE_HOUR"
+                || value === "DEADLINE_THIRTY_MINUTES"
+                || value === "DAILY_GOAL_DAY_END_ONE_HOUR"
+                || value === "DAILY_GOAL_DAY_END_THIRTY_MINUTES";
+    }
+
+    function showReminderToast(reminder) {
+        if (!refs.reminderToastRegion) {
+            return;
+        }
+
+        const toast = document.createElement("article");
+        const content = document.createElement("div");
+        const title = document.createElement("strong");
+        const message = document.createElement("span");
+        const time = document.createElement("small");
+        const dismiss = document.createElement("button");
+
+        toast.className = "reminder-toast";
+        toast.setAttribute("role", "status");
+        content.className = "reminder-toast-content";
+        title.textContent = reminderLabel(reminder.reminderType);
+        message.textContent = reminder.message || "Reminder";
+        time.textContent = formatDateTime(reminder.sentAt || reminder.scheduledAt);
+        dismiss.className = "reminder-toast-dismiss";
+        dismiss.type = "button";
+        dismiss.setAttribute("aria-label", "Dismiss reminder");
+        dismiss.textContent = "x";
+
+        content.appendChild(title);
+        content.appendChild(message);
+        content.appendChild(time);
+        toast.appendChild(content);
+        toast.appendChild(dismiss);
+        refs.reminderToastRegion.appendChild(toast);
+
+        const removeToast = function () {
+            toast.remove();
+        };
+
+        dismiss.addEventListener("click", removeToast);
+        window.setTimeout(removeToast, 10000);
+    }
+
+    function rememberDisplayedReminder(reminderId) {
+        if (reminderId === null || reminderId === undefined) {
+            return;
+        }
+
+        const normalizedId = String(reminderId);
+        displayedReminderIds = displayedReminderIds.filter(function (storedId) {
+            return storedId !== normalizedId;
+        });
+        displayedReminderIds.push(normalizedId);
+        const persistedReminderIds = displayedReminderIds.slice(-50);
+
+        try {
+            localStorage.setItem(displayedReminderStorageKey, JSON.stringify(persistedReminderIds));
+        } catch (error) {
+            // Ignore storage errors; the in-memory list still prevents duplicate toasts this session.
+        }
+    }
+
+    function readDisplayedReminderIds() {
+        try {
+            const storedIds = JSON.parse(localStorage.getItem(displayedReminderStorageKey) || "[]");
+
+            if (!Array.isArray(storedIds)) {
+                return [];
+            }
+
+            return storedIds.filter(function (storedId) {
+                return storedId !== null && storedId !== undefined;
+            }).map(String).slice(-50);
+        } catch (error) {
+            return [];
+        }
+    }
+
+    function isRecentReminder(reminder, windowMs) {
+        const timestamp = dateValue(reminder.sentAt || reminder.scheduledAt);
+        const ageMs = Date.now() - timestamp;
+        return Number.isFinite(timestamp) && ageMs >= 0 && ageMs <= windowMs;
+    }
+
     function fallbackProgress(tasks) {
         const taskList = asArray(tasks);
         const done = taskList.filter(function (task) { return task.status === "DONE"; }).length;
@@ -696,7 +860,11 @@
             AVAILABILITY_BASED: "가능 시간",
             DEADLINE_WARNING: "마감 경고",
             OVERDUE_ALERT: "기한 초과",
-            DELAYED_IN_SITE: "Focus 확인"
+            DELAYED_IN_SITE: "Focus 확인",
+            DAILY_GOAL_DAY_END_ONE_HOUR: "Daily Goal 마감 1시간 전",
+            DAILY_GOAL_DAY_END_THIRTY_MINUTES: "Daily Goal 마감 30분 전",
+            DEADLINE_ONE_HOUR: "Task 마감 1시간 전",
+            DEADLINE_THIRTY_MINUTES: "Task 마감 30분 전"
         };
         return labels[value] || "알림";
     }

@@ -8,6 +8,17 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  mail:
+    host: ${SMTP_HOST:}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${SMTP_AUTH:false}
+          starttls:
+            enable: ${SMTP_STARTTLS_ENABLE:true}
 
 server:
   port: 8080
@@ -16,3 +27,7 @@ app:
   jwt:
     secret: ${JWT_SECRET:local-development-secret-change-before-production-0123456789}
     expiration-minutes: ${JWT_EXPIRATION_MINUTES:1440}
+  notification:
+    email:
+      enabled: ${EMAIL_NOTIFICATIONS_ENABLED:false}
+      from: ${EMAIL_FROM:no-reply@surfthetask.local}

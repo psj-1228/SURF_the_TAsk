@@ -6,7 +6,8 @@ Run the setup helper with a MySQL administrator account before starting the Spri
 .\scripts\setup-mysql.ps1 -AdminUser root -AdminPassword "<mysql-root-password>"
 ```
 
-The helper executes `01-create-database.sql` and `02-create-tables.sql`.
+The helper executes all numbered `*.sql` files in this directory in name order.
+For an existing database that already has the base tables, run `03-update-reminder-notification-types.sql` with a MySQL administrator account before deploying the reminder notification changes.
 
 Default local application credentials:
 

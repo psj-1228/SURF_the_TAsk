@@ -11,9 +11,6 @@ $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projectDir = Split-Path -Parent $scriptDir
 $dbDir = Join-Path $projectDir "src/main/resources/db/mysql"
 
-$createDatabaseScript = Join-Path $dbDir "01-create-database.sql"
-$createTablesScript = Join-Path $dbDir "02-create-tables.sql"
-
 if (-not (Get-Command mysql -ErrorAction SilentlyContinue)) {
     throw "mysql command was not found. Install MySQL Server or add mysql.exe to PATH."
 }
@@ -27,11 +24,12 @@ try {
 
     $env:MYSQL_PWD = $AdminPassword
 
-    Get-Content -Raw -LiteralPath $createDatabaseScript |
-        mysql -h $HostName -P $Port -u $AdminUser --default-character-set=utf8mb4
-
-    Get-Content -Raw -LiteralPath $createTablesScript |
-        mysql -h $HostName -P $Port -u $AdminUser --default-character-set=utf8mb4
+    Get-ChildItem -LiteralPath $dbDir -Filter "*.sql" |
+        Sort-Object Name |
+        ForEach-Object {
+            Get-Content -Raw -LiteralPath $_.FullName |
+                mysql -h $HostName -P $Port -u $AdminUser --default-character-set=utf8mb4
+        }
 }
 finally {
     $env:MYSQL_PWD = $previousMysqlPassword

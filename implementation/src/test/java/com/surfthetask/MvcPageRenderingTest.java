@@ -41,7 +41,8 @@ class MvcPageRenderingTest {
                 .andExpect(content().string(not(containsString("data-wave-rate"))))
                 .andExpect(content().string(not(containsString("wave-fill"))))
                 .andExpect(content().string(containsString("href=\"/focus\"")))
-                .andExpect(content().string(containsString("href=\"/progress\"")));
+                .andExpect(content().string(containsString("href=\"/progress\"")))
+                .andExpect(content().string(containsString("data-reminder-toast-region")));
     }
 
     @Test

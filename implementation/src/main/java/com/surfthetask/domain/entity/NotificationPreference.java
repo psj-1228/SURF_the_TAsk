@@ -74,7 +74,12 @@ public class NotificationPreference {
         if (type == ReminderType.AVAILABILITY_BASED) {
             return availabilityReminderEnabled;
         }
-        if (type == ReminderType.DEADLINE_WARNING || type == ReminderType.OVERDUE_ALERT) {
+        if (type == ReminderType.DEADLINE_WARNING
+                || type == ReminderType.OVERDUE_ALERT
+                || type == ReminderType.DAILY_GOAL_DAY_END_ONE_HOUR
+                || type == ReminderType.DAILY_GOAL_DAY_END_THIRTY_MINUTES
+                || type == ReminderType.DEADLINE_ONE_HOUR
+                || type == ReminderType.DEADLINE_THIRTY_MINUTES) {
             return deadlineReminderEnabled;
         }
         return true;

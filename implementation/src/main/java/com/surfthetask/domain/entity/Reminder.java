@@ -40,7 +40,7 @@ public class Reminder {
     private FocusSession focusSession;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "reminder_type", nullable = false, length = 30)
+    @Column(name = "reminder_type", nullable = false, length = 40)
     private ReminderType reminderType;
 
     @Enumerated(EnumType.STRING)
