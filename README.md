@@ -36,6 +36,130 @@ ERD 이미지는 추후 `images/ERD.png` 경로에 추가할 예정입니다.
 
 프로젝트 구현이 정리되면 로컬 실행 환경, 환경 변수, 데이터베이스 초기화, 실행 명령어를 이곳에 작성할 예정입니다.
 
+## 실행 방법
+
+### 1. 로컬 Docker 실행
+
+Docker Desktop 또는 Docker Engine과 Docker Compose 플러그인이 설치되어 있어야 합니다.
+
+```powershell
+cd implementation
+Copy-Item .env.example .env
+docker compose up --build
+```
+
+실행 후 브라우저에서 아래 주소로 접속합니다.
+
+```text
+http://localhost:8080
+```
+
+인증이 필요한 화면을 바로 확인하려면 로컬 개발용 로그인 경로를 사용할 수 있습니다.
+
+```text
+http://localhost:8080/dev-login
+```
+
+컨테이너를 중지하려면 아래 명령을 실행합니다.
+
+```powershell
+docker compose down
+```
+
+MySQL 데이터 볼륨까지 삭제하고 새로 시작하려면 아래 명령을 사용합니다.
+
+```powershell
+docker compose down -v
+```
+
+로컬 Docker 구성은 SMTP 환경 변수를 앱 컨테이너에 전달하지 않으므로 이메일 알림을 발송하지 않습니다.
+
+### 2. AWS EC2 배포
+
+이 프로젝트는 EC2에 Spring Boot 앱 컨테이너를 배포하고, 운영 데이터베이스는 Amazon RDS MySQL을 사용하는 구성을 기준으로 합니다.
+
+EC2 보안 그룹에서 SSH 22번 포트와 앱 접속 포트를 열어둡니다. 기본 앱 포트는 8080입니다.
+
+Ubuntu EC2 기준 Docker 설치 예시는 아래와 같습니다.
+
+```bash
+sudo apt update
+sudo apt install -y docker.io docker-compose-plugin git
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+EC2에서 프로젝트를 받은 뒤 `implementation` 디렉터리로 이동합니다.
+
+```bash
+git clone <repository-url>
+cd SURF_the_TAsk/implementation
+```
+
+`.env` 파일을 생성하고 RDS, JWT, SMTP 접속 정보를 입력합니다.
+
+```bash
+cat > .env <<'EOF'
+SPRING_PROFILES_ACTIVE=prod
+APP_PORT=8080
+
+DB_URL=jdbc:mysql://<rds-endpoint>:3306/surf_the_task?useSSL=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+DB_USERNAME=<rds-user>
+DB_PASSWORD=<rds-password>
+DDL_AUTO=validate
+
+JWT_SECRET=<replace-with-at-least-32-bytes-random-secret>
+JWT_EXPIRATION_MINUTES=1440
+
+EMAIL_NOTIFICATIONS_ENABLED=true
+EMAIL_FROM=<sender-email>
+SMTP_HOST=<smtp-host>
+SMTP_PORT=587
+SMTP_USERNAME=<smtp-username>
+SMTP_PASSWORD=<smtp-app-password>
+SMTP_AUTH=true
+SMTP_STARTTLS_ENABLE=true
+EOF
+```
+
+RDS에는 `surf_the_task` 데이터베이스와 테이블이 먼저 준비되어 있어야 합니다. 스키마 SQL은 아래 경로에 있습니다.
+
+```text
+implementation/src/main/resources/db/mysql/01-create-database.sql
+implementation/src/main/resources/db/mysql/02-create-tables.sql
+```
+
+EC2에서 앱을 빌드하고 백그라운드로 실행합니다.
+
+```bash
+docker compose -f docker-compose.aws.yml up -d --build
+```
+
+로그 확인:
+
+```bash
+docker compose -f docker-compose.aws.yml logs -f app
+```
+
+브라우저에서 아래 주소로 접속합니다.
+
+```text
+http://<EC2_PUBLIC_IP>:8080
+```
+
+80번 포트로 접속하고 싶다면 `.env`에서 `APP_PORT=80`으로 바꾼 뒤 다시 실행합니다.
+
+```bash
+docker compose -f docker-compose.aws.yml up -d --build
+```
+
+새 커밋을 배포할 때는 EC2에서 아래 명령을 실행합니다.
+
+```bash
+git pull
+docker compose -f docker-compose.aws.yml up -d --build
+```
+
 ## Commit Message Convention
 
 커밋 메시지는 아래 형식을 따릅니다.
