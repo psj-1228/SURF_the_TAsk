@@ -115,3 +115,23 @@ Private helpers added inside `ReminderService`:
 
 - `dashboard/index.html` adds `data-reminder-toast-region` for the accessible in-site reminder toast region.
 - `dashboard.js` also treats sent Daily Goal day-end and Deadline Task email reminders as dashboard popup candidates so deadline warnings appear while the user is on the dashboard.
+
+## Daily Goal Rollover Backend Additions
+
+### Reason
+
+Daily Goal은 매일 다시 수행 여부를 체크하는 반복 목표이므로, 하루가 지나면 화면 상태를 `DONE`에서 `TODO`로 되돌리되 연속 수행 streak은 날짜 기준으로 유지해야 한다. 하루 이상 놓친 목표는 streak을 `0`으로 초기화한다.
+
+### Service And Scheduler Added
+
+- `DailyGoalRolloverService`: `DailyGoal`의 날짜 기반 상태 복원과 streak 초기화를 담당한다.
+- `DailyGoalRolloverService.rollOver(LocalDate today)`: 테스트 가능한 날짜 기준 롤오버 진입점이다.
+- `DailyGoalRolloverService.rollOver()`: 스케줄러에서 현재 날짜 기준으로 실행하는 진입점이다.
+- `DailyGoalRolloverScheduler.runDailyGoalRollover()`: 매일 `Asia/Seoul` 기준 00:05에 Daily Goal 롤오버를 실행한다.
+
+### Repository Query Added
+
+- `DailyGoalRepository.findByStatusInOrLastCompletedDateBefore(List<TaskStatus> statuses, LocalDate lastCompletedDate)`: 완료/진행 중이거나 마지막 완료일이 오늘 이전인 Daily Goal 후보를 조회한다.
+
+### Entity Method Added
+- `DailyGoal.resetStreak()`: 누락된 날짜가 확인된 Daily Goal의 `currentStreak`를 초기화한다. 기존 `recordCompletion(LocalDate)`의 streak 증가 규칙은 유지한다.

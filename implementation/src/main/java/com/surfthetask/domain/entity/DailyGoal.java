@@ -53,6 +53,10 @@ public class DailyGoal extends Task {
         this.targetCountPerDay = requirePositive(targetCountPerDay, "targetCountPerDay");
     }
 
+    public void resetStreak() {
+        currentStreak = 0;
+    }
+
     public boolean isCompletedOn(LocalDate date) {
         return lastCompletedDate != null && lastCompletedDate.equals(date);
     }
