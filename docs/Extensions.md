@@ -97,7 +97,7 @@ Private helpers added inside `ReminderService`:
 - `sendEmailReminder`
 - `failReminder`
 - `isInTargetWindow`
-- `hasTaskReminderAtOrAfter`
+- `hasTaskReminderAt`
 - `emailSubject`
 - `addIfNotNull`
 
