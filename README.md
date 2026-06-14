@@ -24,7 +24,22 @@ Daily Goal과 Deadline Task를 구분해 관리하고, 집중 모드(On/Off), �
   <img src="images/Proto%20Type.png" alt="SURF the TAsk Prototype" width="720">
 </p>
 
-## 사용자 시작 방법
+## 배포된 서비스 접속
+
+현재 AWS(서울 리전, EC2 + RDS MySQL)에 배포되어 있으며 아래 주소로 바로 접속할 수 있습니다.
+
+```text
+http://43.201.30.249:8080
+```
+
+처음 사용하는 경우 회원가입 후 로그인합니다.
+
+- 로그인: http://43.201.30.249:8080/login
+- 회원가입: http://43.201.30.249:8080/register
+
+> 운영 인스턴스에 고정(탄력적) IP를 연결하지 않은 경우, 서버를 재시작하면 접속 주소가 변경될 수 있습니다.
+
+## 로컬 실행 방법
 
 Docker Desktop 또는 Docker Engine과 Docker Compose 플러그인이 설치되어 있어야 합니다.
 
