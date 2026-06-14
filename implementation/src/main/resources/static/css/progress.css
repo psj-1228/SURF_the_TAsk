@@ -42,67 +42,14 @@ button {
     font: inherit;
 }
 
-.progress-shell {
-    display: grid;
-    grid-template-columns: 236px minmax(0, 1fr);
+.progress-page-shell {
+    display: block;
     min-height: 100vh;
-}
-
-.side-nav {
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    padding: 24px 18px;
-    color: #ffffff;
-    background:
-            linear-gradient(180deg, rgba(7, 58, 94, 0.97), rgba(3, 29, 51, 0.99)),
-            var(--navy-deep);
-}
-
-.side-brand {
-    display: block;
-    margin: 6px 14px 32px;
-    color: #ffffff;
-    line-height: 0.92;
-}
-
-.side-brand span,
-.side-brand strong {
-    display: block;
-    font-weight: 900;
-}
-
-.side-brand span {
-    font-size: 24px;
-}
-
-.side-brand strong {
-    color: #bdeed9;
-    font-size: 20px;
-}
-
-.nav-list {
-    display: grid;
-    gap: 8px;
-}
-
-.nav-list a {
-    display: block;
-    padding: 12px 14px;
-    border-radius: 8px;
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 14px;
-    font-weight: 800;
-}
-
-.nav-list a:hover,
-.nav-list a.active {
-    color: #ffffff;
-    background: rgba(31, 99, 209, 0.78);
 }
 
 .progress-main {
     width: min(1440px, 100%);
+    margin: 0 auto;
     padding: 34px 36px 44px;
 }
 
@@ -139,32 +86,6 @@ button {
     align-items: center;
     flex-wrap: wrap;
     justify-content: flex-end;
-}
-
-.period-tabs {
-    display: flex;
-    gap: 4px;
-    padding: 4px;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.78);
-}
-
-.period-tabs button {
-    min-width: 54px;
-    min-height: 34px;
-    border: 0;
-    border-radius: 7px;
-    background: transparent;
-    color: var(--muted);
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 900;
-}
-
-.period-tabs button.active {
-    background: var(--blue);
-    color: #ffffff;
 }
 
 .ghost-link {
@@ -605,28 +526,6 @@ button {
 }
 
 @media (max-width: 1180px) {
-    .progress-shell {
-        grid-template-columns: 1fr;
-    }
-
-    .side-nav {
-        position: static;
-        display: grid;
-        grid-template-columns: auto 1fr;
-        gap: 18px;
-        align-items: center;
-        height: auto;
-    }
-
-    .side-brand {
-        margin: 0;
-    }
-
-    .nav-list {
-        display: flex;
-        overflow-x: auto;
-    }
-
     .analytics-grid {
         grid-template-columns: minmax(280px, 0.8fr) minmax(420px, 1.2fr);
     }
@@ -661,27 +560,12 @@ button {
         padding: 22px 14px 30px;
     }
 
-    .side-nav {
-        grid-template-columns: 1fr;
-    }
-
     .progress-topbar h1 {
         font-size: 26px;
     }
 
-    .topbar-actions,
-    .period-tabs {
+    .topbar-actions {
         width: 100%;
-    }
-
-    .period-tabs {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-
-    .period-tabs button {
-        min-width: 0;
-        padding: 0 4px;
     }
 
     .ghost-link {

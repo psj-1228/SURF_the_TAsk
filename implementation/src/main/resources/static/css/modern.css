@@ -23,7 +23,13 @@
     display: none !important;
 }
 
+html,
 body {
+    min-height: 100%;
+}
+
+body {
+    margin: 0;
     color: var(--modern-ink);
     background:
             radial-gradient(circle at 92% 8%, rgba(31, 110, 212, 0.12), transparent 28rem),
@@ -52,7 +58,6 @@ a {
 .app-shell,
 .schedule-shell,
 .focus-shell,
-.progress-shell,
 .modern-shell {
     display: grid;
     grid-template-columns: 236px minmax(0, 1fr);
@@ -497,7 +502,6 @@ a {
     .app-shell,
     .schedule-shell,
     .focus-shell,
-    .progress-shell,
     .modern-shell {
         grid-template-columns: 1fr;
     }
@@ -513,10 +517,10 @@ a {
     }
 
     .nav-list {
-        display: flex;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
         gap: 8px;
-        overflow-x: auto;
-        padding-bottom: 4px;
+        overflow: visible;
     }
 
     .summary-grid,
@@ -583,7 +587,6 @@ body {
 
 .app-shell,
 .schedule-shell,
-.progress-shell,
 .modern-shell {
     grid-template-columns: 184px minmax(0, 1fr);
     background: var(--prototype-page);
@@ -977,7 +980,7 @@ body {
 }
 
 .schedule-board {
-    grid-template-columns: 56px repeat(5, minmax(118px, 1fr));
+    grid-template-columns: 58px repeat(7, minmax(86px, 1fr));
 }
 
 .time-rail,
@@ -1001,116 +1004,6 @@ body {
     resize: vertical;
 }
 
-.focus-shell[data-prototype-screen="focus"] {
-    grid-template-columns: 154px minmax(0, 1fr);
-    background: var(--prototype-navy-deep);
-}
-
-.focus-shell[data-prototype-screen="focus"] .side-nav {
-    background:
-            linear-gradient(180deg, rgba(5, 52, 83, 0.96), rgba(2, 26, 45, 0.98)),
-            var(--prototype-navy-deep);
-}
-
-.focus-shell[data-prototype-screen="focus"] .focus-main {
-    padding: 0;
-    background: var(--prototype-navy-deep);
-}
-
-.focus-shell[data-prototype-screen="focus"] .focus-topbar {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-}
-
-.focus-shell[data-prototype-screen="focus"] .focus-stage {
-    width: 100%;
-    min-height: 100vh;
-    border-radius: 0;
-    grid-template-columns: 1fr;
-    background:
-            linear-gradient(180deg, rgba(3, 61, 78, 0.74), rgba(1, 30, 48, 0.96)),
-            radial-gradient(circle at 50% 30%, rgba(71, 220, 170, 0.25), transparent 34%),
-            var(--prototype-navy-deep);
-}
-
-.focus-shell[data-prototype-screen="focus"] .voyage-scene {
-    inset: 0;
-}
-
-.focus-shell[data-prototype-screen="focus"] .timer-panel {
-    align-self: center;
-    justify-self: center;
-    width: min(520px, 58vw);
-    margin: 0;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    box-shadow: none;
-    backdrop-filter: none;
-}
-
-.focus-shell[data-prototype-screen="focus"] .timer-ring {
-    width: 296px;
-    height: 296px;
-    background:
-            conic-gradient(#4ee08d var(--timer-progress), rgba(78, 224, 141, 0.2) 0),
-            rgba(255, 255, 255, 0.05);
-}
-
-.focus-shell[data-prototype-screen="focus"] .timer-core {
-    width: 244px;
-    height: 244px;
-    background: rgba(2, 24, 39, 0.72);
-}
-
-.focus-shell[data-prototype-screen="focus"] .focus-main {
-    padding: 30px 34px 38px;
-    background:
-            linear-gradient(180deg, rgba(226, 246, 251, 0.94), rgba(243, 248, 251, 0.98)),
-            #f4f9fc;
-}
-
-.focus-shell[data-prototype-screen="focus"] .focus-topbar {
-    position: static;
-    width: min(1420px, 100%);
-    height: auto;
-    overflow: visible;
-    clip: auto;
-}
-
-.focus-shell[data-prototype-screen="focus"] .focus-stage {
-    width: min(1420px, 100%);
-    min-height: calc(100vh - 142px);
-    border-radius: 8px;
-    grid-template-columns: minmax(420px, 1fr) 360px;
-    background:
-            linear-gradient(180deg, rgba(5, 83, 109, 0.96), rgba(2, 24, 39, 0.98)),
-            var(--prototype-navy-deep);
-}
-
-.focus-shell[data-prototype-screen="focus"] .voyage-scene {
-    inset: 0 360px 0 0;
-}
-
-.focus-shell[data-prototype-screen="focus"] .timer-panel {
-    align-self: center;
-    justify-self: center;
-    width: min(500px, 100%);
-    margin: 0;
-    padding: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    background: rgba(2, 24, 39, 0.36);
-    box-shadow: 0 24px 70px rgba(1, 20, 35, 0.18);
-    backdrop-filter: blur(14px);
-}
-
-.focus-shell[data-prototype-screen="focus"] .control-dock {
-    display: grid;
-}
-
 .analytics-grid {
     grid-template-columns: minmax(250px, 0.78fr) minmax(360px, 1.2fr) minmax(270px, 0.9fr);
 }
@@ -1118,17 +1011,13 @@ body {
 @media (max-width: 980px) {
     .app-shell,
     .schedule-shell,
-    .progress-shell,
-    .modern-shell,
-    .focus-shell[data-prototype-screen="focus"] {
+    .modern-shell {
         grid-template-columns: 1fr;
     }
 
     .app-shell .side-nav,
     .schedule-shell .side-nav,
-    .progress-shell .side-nav,
-    .modern-shell .side-nav,
-    .focus-shell[data-prototype-screen="focus"] .side-nav {
+    .modern-shell .side-nav {
         position: static;
         height: auto;
         min-width: 0;
@@ -1138,29 +1027,24 @@ body {
 
     .app-shell .side-brand,
     .schedule-shell .side-brand,
-    .progress-shell .side-brand,
-    .modern-shell .side-brand,
-    .focus-shell[data-prototype-screen="focus"] .side-brand {
+    .modern-shell .side-brand {
         margin: 0 0 12px;
     }
 
     .app-shell .nav-list,
     .schedule-shell .nav-list,
-    .progress-shell .nav-list,
-    .modern-shell .nav-list,
-    .focus-shell[data-prototype-screen="focus"] .nav-list {
-        display: flex;
+    .modern-shell .nav-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
         gap: 8px;
         min-width: 0;
         max-width: 100%;
-        overflow-x: auto;
-        padding-bottom: 4px;
+        overflow: visible;
     }
 
     .modern-shell .modern-main,
     .schedule-shell .schedule-main,
-    .schedule-shell .timetable-panel,
-    .focus-shell[data-prototype-screen="focus"] .focus-main {
+    .schedule-shell .timetable-panel {
         min-width: 0;
         max-width: 100vw;
     }

@@ -292,9 +292,9 @@ button:disabled {
 
 .schedule-board {
     display: grid;
-    grid-template-columns: 58px repeat(5, minmax(86px, 1fr));
+    grid-template-columns: 58px repeat(7, minmax(86px, 1fr));
     grid-template-rows: 42px auto;
-    min-width: 520px;
+    min-width: 720px;
     border: 1px solid var(--line);
     border-radius: 8px;
     overflow: hidden;

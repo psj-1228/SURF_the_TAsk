@@ -9,25 +9,7 @@
     <script defer src="/js/progress.js"></script>
 </head>
 <body>
-<div class="progress-shell" data-progress-page data-prototype-screen="progress">
-    <aside class="side-nav" aria-label="주요 메뉴">
-        <a class="side-brand" href="/dashboard" aria-label="SURF the TAsk 대시보드">
-            <span>SURF</span>
-            <strong>the TAsk</strong>
-        </a>
-        <nav class="nav-list">
-            <a href="/dashboard">대시보드</a>
-            <a href="/schedule">개인 시간표</a>
-            <a href="/daily-goals">매일 목표</a>
-            <a href="/tasks">마감 업무</a>
-            <a href="#overview">개요</a>
-            <a href="/focus">집중 모드</a>
-            <a href="#daily-rate">일별 완료율</a>
-            <a class="active" href="/progress">진행 현황</a>
-            <a href="/reminders">알림</a>
-        </nav>
-    </aside>
-
+<div class="progress-page-shell" data-progress-page>
     <main class="progress-main">
         <header class="progress-topbar">
             <div>
@@ -36,9 +18,7 @@
                 <p data-progress-date>진행도 데이터를 불러오는 중입니다.</p>
             </div>
             <div class="topbar-actions">
-                <div class="period-tabs" aria-label="진행 현황 기간">
-                    <button class="active" type="button">개요</button>
-                </div>
+                <a class="ghost-link" href="/focus">집중 모드</a>
                 <a class="ghost-link" href="/dashboard">대시보드</a>
             </div>
         </header>

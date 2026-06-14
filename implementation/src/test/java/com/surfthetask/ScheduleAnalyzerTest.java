@@ -46,6 +46,27 @@ class ScheduleAnalyzerTest {
         assertThat(mondaySlots.get(0).getEndTime()).isEqualTo(LocalTime.of(23, 59));
     }
 
+    @Test
+    void weekendSchedulesAffectSundayAvailability() {
+        PersonalSchedule sundayClass = schedule(
+                "Sunday class",
+                DayOfWeek.SUNDAY,
+                LocalTime.of(9, 0),
+                LocalTime.of(11, 0)
+        );
+
+        List<AvailabilitySlot> sundaySlots = analyzer.calculateAvailability(List.of(sundayClass))
+                .stream()
+                .filter(slot -> slot.getDayOfWeek() == DayOfWeek.SUNDAY)
+                .toList();
+
+        assertThat(sundaySlots).hasSize(2);
+        assertThat(sundaySlots.get(0).getStartTime()).isEqualTo(LocalTime.of(7, 0));
+        assertThat(sundaySlots.get(0).getEndTime()).isEqualTo(LocalTime.of(9, 0));
+        assertThat(sundaySlots.get(1).getStartTime()).isEqualTo(LocalTime.of(11, 0));
+        assertThat(sundaySlots.get(1).getEndTime()).isEqualTo(LocalTime.of(23, 59));
+    }
+
     private PersonalSchedule schedule(String title, DayOfWeek day, LocalTime start, LocalTime end) {
         return new PersonalSchedule(
                 new User("schedule_test", "hash", "Schedule Test", "schedule@example.com"),

@@ -45,6 +45,7 @@
         priorityList: document.querySelector("[data-priority-list]"),
         dailyList: document.querySelector("[data-daily-list]"),
         deadlineList: document.querySelector("[data-deadline-list]"),
+        availabilityBanner: document.querySelector("[data-availability-banner]"),
         availabilityList: document.querySelector("[data-availability-list]"),
         reminderList: document.querySelector("[data-reminder-list]"),
         confirmDeleteModal: document.querySelector("[data-confirm-delete-modal]"),
@@ -620,6 +621,7 @@
     }
 
     function renderAvailability(slots) {
+        refs.availabilityBanner.hidden = !isCurrentlyAvailable(slots);
         refs.availabilityCount.textContent = slots.length;
         refs.availabilityList.innerHTML = "";
 
@@ -628,13 +630,25 @@
             return;
         }
 
-        slots.slice(0, 6).forEach(function (slot) {
+        slots.slice(0, 7).forEach(function (slot) {
             const item = document.createElement("article");
             item.className = "slot-item";
             item.innerHTML = "<strong>" + dayName(slot.dayOfWeek) + "</strong>"
                     + "<span>" + trimTime(slot.startTime) + " - " + trimTime(slot.endTime)
                     + " | " + slot.durationMinutes + "분</span>";
             refs.availabilityList.appendChild(item);
+        });
+    }
+
+    function isCurrentlyAvailable(slots) {
+        const now = new Date();
+        const currentDay = currentDayOfWeek(now);
+        const currentMinute = now.getHours() * 60 + now.getMinutes();
+
+        return asArray(slots).some(function (slot) {
+            return slot.dayOfWeek === currentDay
+                    && currentMinute >= minutes(slot.startTime)
+                    && currentMinute < minutes(slot.endTime);
         });
     }
 
@@ -902,6 +916,26 @@
 
     function trimTime(value) {
         return value ? value.slice(0, 5) : "--:--";
+    }
+
+    function minutes(value) {
+        if (!value) {
+            return 0;
+        }
+        const parts = String(value).split(":");
+        return Number(parts[0] || 0) * 60 + Number(parts[1] || 0);
+    }
+
+    function currentDayOfWeek(date) {
+        return [
+            "SUNDAY",
+            "MONDAY",
+            "TUESDAY",
+            "WEDNESDAY",
+            "THURSDAY",
+            "FRIDAY",
+            "SATURDAY"
+        ][date.getDay()];
     }
 
     function dayName(value) {
