@@ -768,16 +768,14 @@ Verification targets:
 - Authentication screen: `http://localhost:8080/login`
 - Registration screen: `http://localhost:8080/register`
 - User dashboard after login: `http://localhost:8080/dashboard`
-- Development shortcut for authenticated screens: `http://localhost:8080/dev-login`
 - Mobile phone viewport for every changed frontend/MVC screen
 
 Rules:
 
 - Use `gradle bootRun` as the primary verification method for frontend/MVC work.
 - Use the browser against the running app to verify actual page rendering, API calls, redirects, and console errors.
-- For dashboard, progress, task, schedule, focus, and reminder screens, start browser verification from `/dev-login` in the `local` profile instead of manually repeating the login form.
+- For dashboard, progress, task, schedule, focus, and reminder screens, sign in through the ordinary login or registration flow before navigating to authenticated pages.
 - Use `/login` and `/register` as verification entry points only when those authentication screens or the authentication flow changed.
-- `/dev-login` is local-development only. It creates or refreshes the fixed `surf_dev` user, stores the JWT payload in `localStorage.surfUser`, and redirects to `/dashboard`.
 - Always verify mobile phone rendering after changing frontend templates, CSS, or frontend JavaScript.
 - Mobile verification must confirm that text, form fields, buttons, cards, and primary images are not overlapped, clipped, or horizontally overflowing.
 - `gradle test` may be used as an additional backend/context check, but it is not the primary frontend/MVC verification command.

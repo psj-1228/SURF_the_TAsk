@@ -1,7 +1,5 @@
 package com.surfthetask;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,19 +8,16 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 class DevLoginIntegrationTest {
 
     private static final String DEV_LOGIN_ID = "surf_dev";
-    private static final Pattern TOKEN_PATTERN = Pattern.compile("\"token\":\"([^\"]+)\"");
 
     @Autowired
     private MockMvc mockMvc;
@@ -41,29 +36,21 @@ class DevLoginIntegrationTest {
     }
 
     @Test
-    void devLoginSeedsLocalStorageAndRedirectsToDashboard() throws Exception {
-        String html = mockMvc.perform(get("/dev-login"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString("localStorage.setItem(\"surfUser\"")))
-                .andExpect(content().string(containsString("window.location.replace(\"/dashboard\")")))
-                .andExpect(content().string(containsString(DEV_LOGIN_ID)))
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+    void devLoginRouteIsUnavailable() throws Exception {
+        MvcResult result = mockMvc.perform(get("/dev-login"))
+                .andReturn();
 
-        assertThat(tokenFrom(html)).isNotBlank();
+        String body = result.getResponse().getContentAsString();
+
+        assertThat(result.getResponse().getStatus()).isNotEqualTo(200);
+        assertThat(body).doesNotContain("localStorage.setItem(\"surfUser\"");
+        assertThat(body).doesNotContain(DEV_LOGIN_ID);
         Integer userCount = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM users WHERE login_id = ?",
                 Integer.class,
                 DEV_LOGIN_ID
         );
-        assertThat(userCount).isEqualTo(1);
-    }
-
-    private String tokenFrom(String html) {
-        Matcher matcher = TOKEN_PATTERN.matcher(html);
-        assertThat(matcher.find()).isTrue();
-        return matcher.group(1);
+        assertThat(userCount).isZero();
     }
 
     private void cleanupDevUser() {

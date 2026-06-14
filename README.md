@@ -40,10 +40,11 @@ docker compose up --build
 http://localhost:8080
 ```
 
-인증이 필요한 화면을 바로 확인하려면 로컬 개발용 로그인 경로를 사용할 수 있습니다.
+인증이 필요한 화면은 일반 로그인 또는 회원가입 흐름으로 확인합니다.
 
 ```text
-http://localhost:8080/dev-login
+http://localhost:8080/login
+http://localhost:8080/register
 ```
 
 컨테이너를 중지하려면 아래 명령을 실행합니다.
